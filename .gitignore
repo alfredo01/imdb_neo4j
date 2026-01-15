@@ -1,4 +1,3 @@
-neo4j/
 tests/
 .env
 node_modules
