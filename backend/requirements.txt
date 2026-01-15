@@ -1,0 +1,11 @@
+langchain-community
+langchainhub
+langchain-neo4j
+langchain-openai
+pydantic
+langchain==0.3.9
+openai
+fastapi==0.110.0
+uvicorn[standard]
+pandas==2.2.1
+scikit-learn==1.4.1.post1

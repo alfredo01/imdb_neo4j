@@ -1,0 +1,90 @@
+services:
+  neo4j:
+    #build:
+    #  context: .
+    #  dockerfile: Dockerfile
+    #container_name: imdb_neo4j
+    image: aelfred/imdb_neo4j-neo4j:latest
+    ports:
+      - "7474:7474"   # HTTP
+      - "7687:7687"   # Bolt
+    environment:
+      - NEO4J_AUTH=none
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_export_file_use_neo4j_config=true
+      - NEO4J_db_memory_transaction_total_max=2G
+      - NEO4J_PLUGINS=["graph-data-science", "apoc"]
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_dbms_security_procedures_whitelist=gds.*, apoc.*
+      - NEO4J_dbms_security_procedures_unrestricted=gds.*, apoc.*
+    volumes:
+      - ./neo4j/data:/data
+      - ./neo4j/plugins:/plugins
+      - ./neo4j/raw_data:/var/lib/neo4j/import
+    networks:
+      - movies_network
+    restart:
+      always
+
+  #streamlit:
+  #  build:
+  #    context: ./streamlit  # Point to the streamlit folder
+  #    dockerfile: Dockerfile # Ensure it picks up the correct file
+  #  container_name: streamlit
+  #  depends_on:
+  #    - neo4j
+  #  ports:
+  #    - "8501:8501"
+  #  working_dir: /app
+  #  image: streamlit:latest
+  #  volumes:
+  #    - ./streamlit:/app
+  #  networks:
+  #    - movies_network
+  #  #command: streamlit run streamlit_app.py
+#
+  fastapi:
+    #image: python:3.9-slim
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fastapi_server
+    depends_on:
+      - neo4j
+    networks:
+      - movies_network
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./streamlit:/app/streamlit      
+    env_file:
+      - .env
+    restart: unless-stopped
+    #command: >
+    #  sh -c "pip install --upgrade -r requirements.txt && uvicorn app.api:api --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build: 
+      context : ./node-frontend
+
+    #volumes:
+    #  - ./docker-nodejs-sample-main:/app
+    ports:
+      - "3000:3000"
+    
+    depends_on:
+      - fastapi
+      #- streamlit
+    networks:
+      - movies_network
+  #  environment:
+  #    - NODE_ENV=production
+
+volumes:
+  neo4j_data:
+networks:
+  movies_network:
+    driver: bridge

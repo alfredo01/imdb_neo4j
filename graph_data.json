@@ -1,0 +1,1501 @@
+{
+  "nodes": [
+    {
+      "id": "nm0578483",
+      "label": "Jean-Pierre Melville",
+      "type": "Person"
+    },
+    {
+      "id": "tt0067900",
+      "label": "Un flic",
+      "type": "Movie",
+      "year": "1972"
+    },
+    {
+      "id": "nm0934260",
+      "label": "Val\u00e9rie Wilson",
+      "type": "Person"
+    },
+    {
+      "id": "nm0220852",
+      "label": "Jean Desailly",
+      "type": "Person"
+    },
+    {
+      "id": "nm0693868",
+      "label": "Andr\u00e9 Pousse",
+      "type": "Person"
+    },
+    {
+      "id": "nm0885506",
+      "label": "Simone Val\u00e8re",
+      "type": "Person"
+    },
+    {
+      "id": "nm0186567",
+      "label": "Paul Crauchet",
+      "type": "Person"
+    },
+    {
+      "id": "nm0175700",
+      "label": "Michael Conrad",
+      "type": "Person"
+    },
+    {
+      "id": "nm0190977",
+      "label": "Riccardo Cucciolla",
+      "type": "Person"
+    },
+    {
+      "id": "nm0000366",
+      "label": "Catherine Deneuve",
+      "type": "Person"
+    },
+    {
+      "id": "nm0001077",
+      "label": "Richard Crenna",
+      "type": "Person"
+    },
+    {
+      "id": "nm0001128",
+      "label": "Alain Delon",
+      "type": "Person"
+    },
+    {
+      "id": "tt0064040",
+      "label": "L'arm\u00e9e des ombres",
+      "type": "Movie",
+      "year": "1969"
+    },
+    {
+      "id": "nm0215303",
+      "label": "Alain Dekok",
+      "type": "Person"
+    },
+    {
+      "id": "nm0223072",
+      "label": "Andr\u00e9 Dewavrin",
+      "type": "Person"
+    },
+    {
+      "id": "nm0716577",
+      "label": "Serge Reggiani",
+      "type": "Person"
+    },
+    {
+      "id": "nm0053607",
+      "label": "Christian Barbier",
+      "type": "Person"
+    },
+    {
+      "id": "nm0542690",
+      "label": "Claude Mann",
+      "type": "Person"
+    },
+    {
+      "id": "nm0797531",
+      "label": "Simone Signoret",
+      "type": "Person"
+    },
+    {
+      "id": "nm0144045",
+      "label": "Jean-Pierre Cassel",
+      "type": "Person"
+    },
+    {
+      "id": "nm0582890",
+      "label": "Paul Meurisse",
+      "type": "Person"
+    },
+    {
+      "id": "nm0893341",
+      "label": "Lino Ventura",
+      "type": "Person"
+    },
+    {
+      "id": "tt0062229",
+      "label": "Le samoura\u00ef",
+      "type": "Movie",
+      "year": "1967"
+    },
+    {
+      "id": "nm0289516",
+      "label": "Roger Fradet",
+      "type": "Person"
+    },
+    {
+      "id": "nm0431129",
+      "label": "Catherine Jourdan",
+      "type": "Person"
+    },
+    {
+      "id": "nm0692680",
+      "label": "Jean-Pierre Posier",
+      "type": "Person"
+    },
+    {
+      "id": "nm0269376",
+      "label": "Robert Favart",
+      "type": "Person"
+    },
+    {
+      "id": "nm0092330",
+      "label": "Michel Boisrond",
+      "type": "Person"
+    },
+    {
+      "id": "nm0503761",
+      "label": "Jacques Leroy",
+      "type": "Person"
+    },
+    {
+      "id": "nm0742975",
+      "label": "Cathy Rosier",
+      "type": "Person"
+    },
+    {
+      "id": "nm0217677",
+      "label": "Nathalie Delon",
+      "type": "Person"
+    },
+    {
+      "id": "nm0673749",
+      "label": "Fran\u00e7ois P\u00e9rier",
+      "type": "Person"
+    },
+    {
+      "id": "tt0060305",
+      "label": "Le deuxi\u00e8me souffle",
+      "type": "Movie",
+      "year": "1966"
+    },
+    {
+      "id": "nm0956643",
+      "label": "Pierre Zimmer",
+      "type": "Person"
+    },
+    {
+      "id": "nm0176039",
+      "label": "Michel Constantin",
+      "type": "Person"
+    },
+    {
+      "id": "nm0639058",
+      "label": "Jean N\u00e9groni",
+      "type": "Person"
+    },
+    {
+      "id": "nm0544240",
+      "label": "Denis Manuel",
+      "type": "Person"
+    },
+    {
+      "id": "nm0291289",
+      "label": "Paul Frankeur",
+      "type": "Person"
+    },
+    {
+      "id": "nm0102566",
+      "label": "Marcel Bozzuffi",
+      "type": "Person"
+    },
+    {
+      "id": "nm0264799",
+      "label": "Christine Fabr\u00e9ga",
+      "type": "Person"
+    },
+    {
+      "id": "nm0670964",
+      "label": "Raymond Pellegrin",
+      "type": "Person"
+    },
+    {
+      "id": "tt0056845",
+      "label": "L'a\u00een\u00e9 des Ferchaux",
+      "type": "Movie",
+      "year": "1963"
+    },
+    {
+      "id": "nm0028903",
+      "label": "Andrex",
+      "type": "Person"
+    },
+    {
+      "id": "nm0580440",
+      "label": "Mich\u00e8le Mercier",
+      "type": "Person"
+    },
+    {
+      "id": "nm0201561",
+      "label": "Simone Darot",
+      "type": "Person"
+    },
+    {
+      "id": "nm0448709",
+      "label": "Delia Kent",
+      "type": "Person"
+    },
+    {
+      "id": "nm0355610",
+      "label": "Ginger Hall",
+      "type": "Person"
+    },
+    {
+      "id": "nm0814051",
+      "label": "Barbara Sommers",
+      "type": "Person"
+    },
+    {
+      "id": "nm0797848",
+      "label": "Malvina Silberberg",
+      "type": "Person"
+    },
+    {
+      "id": "nm0762248",
+      "label": "Stefania Sandrelli",
+      "type": "Person"
+    },
+    {
+      "id": "nm0889024",
+      "label": "Charles Vanel",
+      "type": "Person"
+    },
+    {
+      "id": "nm0000901",
+      "label": "Jean-Paul Belmondo",
+      "type": "Person"
+    },
+    {
+      "id": "tt0055082",
+      "label": "L\u00e9on Morin, pr\u00eatre",
+      "type": "Movie",
+      "year": "1961"
+    },
+    {
+      "id": "nm0377306",
+      "label": "Monique Hennessy",
+      "type": "Person"
+    },
+    {
+      "id": "nm0344911",
+      "label": "Nina Gr\u00e9goire",
+      "type": "Person"
+    },
+    {
+      "id": "nm0264211",
+      "label": "Marc Eyraud",
+      "type": "Person"
+    },
+    {
+      "id": "nm0077989",
+      "label": "Monique Bertho",
+      "type": "Person"
+    },
+    {
+      "id": "nm0066879",
+      "label": "Marco Behar",
+      "type": "Person"
+    },
+    {
+      "id": "nm0342272",
+      "label": "Gis\u00e8le Grimm",
+      "type": "Person"
+    },
+    {
+      "id": "nm0592317",
+      "label": "Nicole Mirel",
+      "type": "Person"
+    },
+    {
+      "id": "nm0876567",
+      "label": "Ir\u00e8ne Tunc",
+      "type": "Person"
+    },
+    {
+      "id": "nm0728938",
+      "label": "Emmanuelle Riva",
+      "type": "Person"
+    },
+    {
+      "id": "tt0054821",
+      "label": "Le doulos",
+      "type": "Movie",
+      "year": "1962"
+    },
+    {
+      "id": "nm0524856",
+      "label": "Christian Lude",
+      "type": "Person"
+    },
+    {
+      "id": "nm0836051",
+      "label": "Carl Studer",
+      "type": "Person"
+    },
+    {
+      "id": "nm0197917",
+      "label": "Fabienne Dali",
+      "type": "Person"
+    },
+    {
+      "id": "nm0210052",
+      "label": "Philippe March",
+      "type": "Person"
+    },
+    {
+      "id": "nm0194062",
+      "label": "Marcel Cuvelier",
+      "type": "Person"
+    },
+    {
+      "id": "nm0499151",
+      "label": "Ren\u00e9 Lef\u00e8vre",
+      "type": "Person"
+    },
+    {
+      "id": "tt0052733",
+      "label": "Deux hommes dans Manhattan",
+      "type": "Movie",
+      "year": "1959"
+    },
+    {
+      "id": "nm0214939",
+      "label": "Paula Dehelly",
+      "type": "Person"
+    },
+    {
+      "id": "nm0047643",
+      "label": "Mich\u00e8le Bailly",
+      "type": "Person"
+    },
+    {
+      "id": "nm0201002",
+      "label": "Jean Darcante",
+      "type": "Person"
+    },
+    {
+      "id": "nm1385969",
+      "label": "Glenda Leigh",
+      "type": "Person"
+    },
+    {
+      "id": "nm0282198",
+      "label": "Colette Fleury",
+      "type": "Person"
+    },
+    {
+      "id": "nm0262302",
+      "label": "Christiane Eudes",
+      "type": "Person"
+    },
+    {
+      "id": "nm0335878",
+      "label": "Pierre Grasset",
+      "type": "Person"
+    },
+    {
+      "id": "tt0047892",
+      "label": "Bob le flambeur",
+      "type": "Movie",
+      "year": "1956"
+    },
+    {
+      "id": "nm0661628",
+      "label": "Simone Paris",
+      "type": "Person"
+    },
+    {
+      "id": "nm0369702",
+      "label": "Ren\u00e9 Havard",
+      "type": "Person"
+    },
+    {
+      "id": "nm0148858",
+      "label": "Claude Cerval",
+      "type": "Person"
+    },
+    {
+      "id": "nm0119587",
+      "label": "G\u00e9rard Buhr",
+      "type": "Person"
+    },
+    {
+      "id": "nm0307217",
+      "label": "Andr\u00e9 Garet",
+      "type": "Person"
+    },
+    {
+      "id": "nm0213948",
+      "label": "Guy Decomble",
+      "type": "Person"
+    },
+    {
+      "id": "nm0146446",
+      "label": "Daniel Cauchy",
+      "type": "Person"
+    },
+    {
+      "id": "nm0179783",
+      "label": "Isabelle Corey",
+      "type": "Person"
+    },
+    {
+      "id": "nm0239841",
+      "label": "Roger Duchesne",
+      "type": "Person"
+    },
+    {
+      "id": "tt0045981",
+      "label": "Quand tu liras cette lettre...",
+      "type": "Movie",
+      "year": "1953"
+    },
+    {
+      "id": "nm0503848",
+      "label": "Roland Lesaffre",
+      "type": "Person"
+    },
+    {
+      "id": "nm0096320",
+      "label": "Claude Borelli",
+      "type": "Person"
+    },
+    {
+      "id": "nm0765022",
+      "label": "Fernand Sardou",
+      "type": "Person"
+    },
+    {
+      "id": "nm0197592",
+      "label": "Robert Dalban",
+      "type": "Person"
+    },
+    {
+      "id": "nm0222164",
+      "label": "Jacques Deval",
+      "type": "Person"
+    },
+    {
+      "id": "nm0303350",
+      "label": "Irene Galter",
+      "type": "Person"
+    },
+    {
+      "id": "nm0763072",
+      "label": "Yvonne Sanson",
+      "type": "Person"
+    },
+    {
+      "id": "nm0501069",
+      "label": "Philippe Lemaire",
+      "type": "Person"
+    },
+    {
+      "id": "nm0344898",
+      "label": "Juliette Gr\u00e9co",
+      "type": "Person"
+    }
+  ],
+  "links": [
+    {
+      "source": "nm0578483",
+      "target": "tt0067900",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0934260",
+      "target": "tt0067900",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0067900",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0220852",
+      "target": "tt0067900",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0067900",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0693868",
+      "target": "tt0067900",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0067900",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0885506",
+      "target": "tt0067900",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0067900",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0186567",
+      "target": "tt0067900",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0067900",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0175700",
+      "target": "tt0067900",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0067900",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0190977",
+      "target": "tt0067900",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0067900",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0000366",
+      "target": "tt0067900",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0067900",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0001077",
+      "target": "tt0067900",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0067900",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0001128",
+      "target": "tt0067900",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0064040",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0215303",
+      "target": "tt0064040",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0064040",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0223072",
+      "target": "tt0064040",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0064040",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0716577",
+      "target": "tt0064040",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0064040",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0053607",
+      "target": "tt0064040",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0064040",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0186567",
+      "target": "tt0064040",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0064040",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0542690",
+      "target": "tt0064040",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0064040",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0797531",
+      "target": "tt0064040",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0064040",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0144045",
+      "target": "tt0064040",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0064040",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0582890",
+      "target": "tt0064040",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0064040",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0893341",
+      "target": "tt0064040",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0062229",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0289516",
+      "target": "tt0062229",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0062229",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0431129",
+      "target": "tt0062229",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0062229",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0692680",
+      "target": "tt0062229",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0062229",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0269376",
+      "target": "tt0062229",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0062229",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0092330",
+      "target": "tt0062229",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0062229",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0503761",
+      "target": "tt0062229",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0062229",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0742975",
+      "target": "tt0062229",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0062229",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0217677",
+      "target": "tt0062229",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0062229",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0673749",
+      "target": "tt0062229",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0062229",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0001128",
+      "target": "tt0062229",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0060305",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0956643",
+      "target": "tt0060305",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0060305",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0176039",
+      "target": "tt0060305",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0060305",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0639058",
+      "target": "tt0060305",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0060305",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0544240",
+      "target": "tt0060305",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0060305",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0291289",
+      "target": "tt0060305",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0060305",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0102566",
+      "target": "tt0060305",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0060305",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0264799",
+      "target": "tt0060305",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0060305",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0670964",
+      "target": "tt0060305",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0060305",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0582890",
+      "target": "tt0060305",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0060305",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0893341",
+      "target": "tt0060305",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0056845",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0028903",
+      "target": "tt0056845",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0056845",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0580440",
+      "target": "tt0056845",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0056845",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0201561",
+      "target": "tt0056845",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0056845",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0448709",
+      "target": "tt0056845",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0056845",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0355610",
+      "target": "tt0056845",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0056845",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0814051",
+      "target": "tt0056845",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0056845",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0797848",
+      "target": "tt0056845",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0056845",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0762248",
+      "target": "tt0056845",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0056845",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0889024",
+      "target": "tt0056845",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0056845",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0000901",
+      "target": "tt0056845",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0055082",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0377306",
+      "target": "tt0055082",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0055082",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0344911",
+      "target": "tt0055082",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0055082",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0264211",
+      "target": "tt0055082",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0055082",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0077989",
+      "target": "tt0055082",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0055082",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0066879",
+      "target": "tt0055082",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0055082",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0342272",
+      "target": "tt0055082",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0055082",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0592317",
+      "target": "tt0055082",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0055082",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0876567",
+      "target": "tt0055082",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0055082",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0728938",
+      "target": "tt0055082",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0055082",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0000901",
+      "target": "tt0055082",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0054821",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0524856",
+      "target": "tt0054821",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0054821",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0836051",
+      "target": "tt0054821",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0054821",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0377306",
+      "target": "tt0054821",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0054821",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0197917",
+      "target": "tt0054821",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0054821",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0210052",
+      "target": "tt0054821",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0054821",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0194062",
+      "target": "tt0054821",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0054821",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0499151",
+      "target": "tt0054821",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0054821",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0220852",
+      "target": "tt0054821",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0054821",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0716577",
+      "target": "tt0054821",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0054821",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0000901",
+      "target": "tt0054821",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0214939",
+      "target": "tt0052733",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0047643",
+      "target": "tt0052733",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0201002",
+      "target": "tt0052733",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm1385969",
+      "target": "tt0052733",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0377306",
+      "target": "tt0052733",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0282198",
+      "target": "tt0052733",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0355610",
+      "target": "tt0052733",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0262302",
+      "target": "tt0052733",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0335878",
+      "target": "tt0052733",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0052733",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0047892",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0661628",
+      "target": "tt0047892",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0047892",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0369702",
+      "target": "tt0047892",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0047892",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0282198",
+      "target": "tt0047892",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0047892",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0148858",
+      "target": "tt0047892",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0047892",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0119587",
+      "target": "tt0047892",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0047892",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0307217",
+      "target": "tt0047892",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0047892",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0213948",
+      "target": "tt0047892",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0047892",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0146446",
+      "target": "tt0047892",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0047892",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0179783",
+      "target": "tt0047892",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0047892",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0239841",
+      "target": "tt0047892",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0045981",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0503848",
+      "target": "tt0045981",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0045981",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0096320",
+      "target": "tt0045981",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0045981",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0765022",
+      "target": "tt0045981",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0045981",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0197592",
+      "target": "tt0045981",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0045981",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0222164",
+      "target": "tt0045981",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0045981",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0146446",
+      "target": "tt0045981",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0045981",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0303350",
+      "target": "tt0045981",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0045981",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0763072",
+      "target": "tt0045981",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0045981",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0501069",
+      "target": "tt0045981",
+      "label": "ACTED_IN"
+    },
+    {
+      "source": "nm0578483",
+      "target": "tt0045981",
+      "label": "DIRECTED"
+    },
+    {
+      "source": "nm0344898",
+      "target": "tt0045981",
+      "label": "ACTED_IN"
+    }
+  ]
+}
