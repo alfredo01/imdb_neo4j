@@ -1,0 +1,6 @@
+outs:
+- md5: d9596f507b7fbffd56093d5e3e37832e.dir
+  size: 67320043
+  nfiles: 2
+  hash: md5
+  path: plugins
