@@ -4,12 +4,12 @@ services:
     #  context: .
     #  dockerfile: Dockerfile
     #container_name: imdb_neo4j
-    image: aelfred/imdb_neo4j-neo4j:latest
+    image: aelfred/imdb_neo4j:latest
     ports:
       - "7474:7474"   # HTTP
       - "7687:7687"   # Bolt
     environment:
-      - NEO4J_AUTH=none
+      - NEO4J_AUTH=neo4j/adminadmin
       - NEO4J_apoc_export_file_enabled=true
       - NEO4J_apoc_import_file_enabled=true
       - NEO4J_apoc_export_file_use_neo4j_config=true

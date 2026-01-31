@@ -5,7 +5,7 @@ import os
 from langchain_neo4j import Neo4jGraph
 
 enhanced_graph = Neo4jGraph(
-    url=os.getenv("NEO4J_URI", "bolt://neo4j:7687"),
+    url=os.getenv("NEO4J_URI", "neo4j://localhost:7687"),
     username=os.getenv("NEO4J_USERNAME", "neo4j"),
     password=os.getenv("NEO4J_PASSWORD"),
     enhanced_schema=True)
