@@ -67,21 +67,22 @@ services:
     #  sh -c "pip install --upgrade -r requirements.txt && uvicorn app.api:api --host 0.0.0.0 --port 8000 --reload"
 
   frontend:
-    build: 
+    build:
       context : ./node-frontend
-
+      args:
+        - REACT_APP_API_URL=http://207.180.232.247:8000
+    environment:
+      - REACT_APP_API_URL=http://207.180.232.247:8000
     #volumes:
     #  - ./docker-nodejs-sample-main:/app
     ports:
       - "3000:3000"
-    
+
     depends_on:
       - fastapi
       #- streamlit
     networks:
       - movies_network
-  #  environment:
-  #    - NODE_ENV=production
 
 volumes:
   neo4j_data:

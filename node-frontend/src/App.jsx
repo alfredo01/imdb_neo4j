@@ -28,7 +28,8 @@ export default function App() {
     setError(null);
 
     try {
-      const response = await axios.post("http://localhost:8000/chat", {
+      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
+      const response = await axios.post(`${apiUrl}/chat`, {
         message: query,
         history: messages
       });
