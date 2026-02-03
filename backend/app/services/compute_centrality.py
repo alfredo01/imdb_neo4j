@@ -10,11 +10,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class CentralityComputer:
-    def __init__(self, uri=None, user="neo4j", password=None):
+    def __init__(self, uri=None, user=None, password=None):
         # Default to container hostname, but allow override for host machine
         if uri is None:
             uri = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
-        self.driver = GraphDatabase.driver(uri, auth=(user, password) if password else None)
+        if user is None:
+            user = os.getenv("NEO4J_USERNAME", "neo4j")
+        if password is None:
+            password = os.getenv("NEO4J_PASSWORD")
+        self.driver = GraphDatabase.driver(uri, auth=(user, password))
 
     def close(self):
         self.driver.close()
@@ -26,6 +30,9 @@ class CentralityComputer:
         """
         with self.driver.session() as session:
             print("Computing Eigenvector Centrality...")
+
+            # Drop existing graph projection if it exists
+            session.run("CALL gds.graph.drop('imdb-graph', false)")
 
             # Create graph projection
             session.run("""
@@ -74,7 +81,10 @@ class CentralityComputer:
         with self.driver.session() as session:
             print("\nComputing PageRank...")
 
-            # Create graph projection (reuse same structure)
+            # Drop existing graph projection if it exists
+            session.run("CALL gds.graph.drop('imdb-graph', false)")
+
+            # Create graph projection
             session.run("""
                 CALL gds.graph.project(
                     'imdb-graph',
@@ -124,14 +134,14 @@ class CentralityComputer:
             # For Person nodes
             session.run("""
                 MATCH (p:Person)
-                SET p.degreeCentrality = size((p)--())
+                SET p.degreeCentrality = count { (p)--() }
             """)
 
             # For all movie-type nodes
             session.run("""
                 MATCH (m)
                 WHERE m:Movie OR m:Short OR m:TVMovie OR m:TVEpisode OR m:TVSpecial OR m:TVPilot OR m:Videogame
-                SET m.degreeCentrality = size((m)--())
+                SET m.degreeCentrality = count { (m)--() }
             """)
 
             print("✓ Degree centrality computed for all nodes")
