@@ -38,19 +38,10 @@ class CentralityComputer:
             session.run("""
                 CALL gds.graph.project(
                     'imdb-graph',
-                    ['Person', 'Movie', 'Short', 'TVMovie', 'TVEpisode', 'TVSpecial', 'TVPilot', 'Videogame'],
+                    ['Person', 'Movie'],
                     {
                         ACTED_IN: {orientation: 'UNDIRECTED'},
-                        DIRECTED: {orientation: 'UNDIRECTED'},
-                        PRODUCED: {orientation: 'UNDIRECTED'},
-                        COMPOSED: {orientation: 'UNDIRECTED'},
-                        CINEMATOGRAPHER: {orientation: 'UNDIRECTED'},
-                        EDITED: {orientation: 'UNDIRECTED'},
-                        WROTE: {orientation: 'UNDIRECTED'},
-                        PRODUCTION_DESIGNER: {orientation: 'UNDIRECTED'},
-                        ARCHIVE_FOOTAGE: {orientation: 'UNDIRECTED'},
-                        CASTING_EDITOR: {orientation: 'UNDIRECTED'},
-                        SELF: {orientation: 'UNDIRECTED'}
+                        DIRECTED: {orientation: 'UNDIRECTED'}
                     }
                 )
             """)
@@ -60,7 +51,8 @@ class CentralityComputer:
             result = session.run("""
                 CALL gds.eigenvector.write('imdb-graph', {
                     writeProperty: 'eigenvectorCentrality',
-                    maxIterations: 20
+                    maxIterations: 20,
+                    concurrency: 1
                 })
                 YIELD nodePropertiesWritten, ranIterations
                 RETURN nodePropertiesWritten, ranIterations
@@ -88,19 +80,10 @@ class CentralityComputer:
             session.run("""
                 CALL gds.graph.project(
                     'imdb-graph',
-                    ['Person', 'Movie', 'Short', 'TVMovie', 'TVEpisode', 'TVSpecial', 'TVPilot', 'Videogame'],
+                    ['Person', 'Movie'],
                     {
                         ACTED_IN: {orientation: 'UNDIRECTED'},
-                        DIRECTED: {orientation: 'UNDIRECTED'},
-                        PRODUCED: {orientation: 'UNDIRECTED'},
-                        COMPOSED: {orientation: 'UNDIRECTED'},
-                        CINEMATOGRAPHER: {orientation: 'UNDIRECTED'},
-                        EDITED: {orientation: 'UNDIRECTED'},
-                        WROTE: {orientation: 'UNDIRECTED'},
-                        PRODUCTION_DESIGNER: {orientation: 'UNDIRECTED'},
-                        ARCHIVE_FOOTAGE: {orientation: 'UNDIRECTED'},
-                        CASTING_EDITOR: {orientation: 'UNDIRECTED'},
-                        SELF: {orientation: 'UNDIRECTED'}
+                        DIRECTED: {orientation: 'UNDIRECTED'}
                     }
                 )
             """)
@@ -110,7 +93,8 @@ class CentralityComputer:
                 CALL gds.pageRank.write('imdb-graph', {
                     writeProperty: 'pageRank',
                     maxIterations: 20,
-                    dampingFactor: 0.85
+                    dampingFactor: 0.85,
+                    concurrency: 1
                 })
                 YIELD nodePropertiesWritten, ranIterations
                 RETURN nodePropertiesWritten, ranIterations
@@ -137,10 +121,9 @@ class CentralityComputer:
                 SET p.degreeCentrality = count { (p)--() }
             """)
 
-            # For all movie-type nodes
+            # For Movie nodes only
             session.run("""
-                MATCH (m)
-                WHERE m:Movie OR m:Short OR m:TVMovie OR m:TVEpisode OR m:TVSpecial OR m:TVPilot OR m:Videogame
+                MATCH (m:Movie)
                 SET m.degreeCentrality = count { (m)--() }
             """)
 
@@ -168,8 +151,8 @@ class CentralityComputer:
             # Eigenvector - Top Movies
             print("\nTop 10 Movies by Eigenvector Centrality:")
             result = session.run("""
-                MATCH (m)
-                WHERE (m:Movie OR m:Short OR m:TVMovie) AND m.eigenvectorCentrality IS NOT NULL
+                MATCH (m:Movie)
+                WHERE m.eigenvectorCentrality IS NOT NULL
                 RETURN m.title AS title, m.year AS year, m.eigenvectorCentrality AS score
                 ORDER BY score DESC
                 LIMIT 10
