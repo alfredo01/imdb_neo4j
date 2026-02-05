@@ -40,8 +40,8 @@ class CentralityComputer:
                     'imdb-graph',
                     ['Person', 'Movie'],
                     {
-                        ACTED_IN: {orientation: 'UNDIRECTED'},
-                        DIRECTED: {orientation: 'UNDIRECTED'}
+                        ACTED_IN: {orientation: 'NATURAL'},
+                        DIRECTED: {orientation: 'NATURAL'}
                     }
                 )
             """)
@@ -82,8 +82,8 @@ class CentralityComputer:
                     'imdb-graph',
                     ['Person', 'Movie'],
                     {
-                        ACTED_IN: {orientation: 'UNDIRECTED'},
-                        DIRECTED: {orientation: 'UNDIRECTED'}
+                        ACTED_IN: {orientation: 'NATURAL'},
+                        DIRECTED: {orientation: 'NATURAL'}
                     }
                 )
             """)
