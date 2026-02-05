@@ -110,21 +110,27 @@ class CentralityComputer:
     def compute_degree_centrality(self):
         """
         Compute degree centrality (simple connection count).
-        Fast and easy to interpret.
+        Fast and easy to interpret. Uses batching to avoid transaction memory limits.
         """
         with self.driver.session() as session:
             print("\nComputing Degree Centrality...")
 
-            # For Person nodes
+            # For Person nodes - process in batches
             session.run("""
-                MATCH (p:Person)
-                SET p.degreeCentrality = count { (p)--() }
+                CALL apoc.periodic.iterate(
+                    'MATCH (p:Person) RETURN p',
+                    'SET p.degreeCentrality = count { (p)--() }',
+                    {batchSize: 10000, parallel: false}
+                )
             """)
 
-            # For Movie nodes only
+            # For Movie nodes - process in batches
             session.run("""
-                MATCH (m:Movie)
-                SET m.degreeCentrality = count { (m)--() }
+                CALL apoc.periodic.iterate(
+                    'MATCH (m:Movie) RETURN m',
+                    'SET m.degreeCentrality = count { (m)--() }',
+                    {batchSize: 10000, parallel: false}
+                )
             """)
 
             print("✓ Degree centrality computed for all nodes")
