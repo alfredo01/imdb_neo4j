@@ -15,6 +15,11 @@ All nodes have centrality scores (eigenvectorCentrality, pageRank, degreeCentral
 When queries might return many nodes (>30), filter to keep visualizations clean using ORDER BY with LIMIT.
 Always return graph patterns (nodes + relationships), not just nodes.
 
+IMPORTANT - Exclude the central node from results:
+When a query is about a specific person or movie (e.g. "Alfred Hitchcock's movies", "actors in Titanic"),
+do NOT return the central/queried entity itself in the results. Only return the connected nodes and their relationships.
+For example, if the question is about Alfred Hitchcock's movies, return the movies and their connections to other people, but exclude Alfred Hitchcock himself.
+
 Examples with graph patterns:
 
 # Specific query - no filtering needed
