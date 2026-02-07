@@ -111,9 +111,9 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
         .on("end", dragended))
       .on("click", (event, d) => onSelect(d));
 
-    // Scale node radius by eigenvectorCentrality
+    // Scale node radius by pageRank
     const centralityValues = data.nodes
-      .map(d => d.eigenvectorCentrality || 0)
+      .map(d => d.pageRank || 0)
       .filter(v => v > 0);
     const maxCentrality = d3.max(centralityValues) || 1;
     const radiusScale = d3.scaleSqrt()
@@ -121,14 +121,14 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
       .range([8, 45]);
 
     node.append("circle")
-      .attr("r", d => d.eigenvectorCentrality ? radiusScale(d.eigenvectorCentrality) : 8)
+      .attr("r", d => d.pageRank ? radiusScale(d.pageRank) : 8)
       .attr("fill", d => d.type === "Movie" ? "#f39c12" : "#3498db")
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
       .style("cursor", "pointer");
 
     node.append("text")
-      .attr("dy", d => -(d.eigenvectorCentrality ? radiusScale(d.eigenvectorCentrality) + 5 : 13))
+      .attr("dy", d => -(d.pageRank ? radiusScale(d.pageRank) + 5 : 13))
       .attr("text-anchor", "middle")
       .style("font-size", d => d.type === "Movie" ? "16px" : "12px")
       .style("font-weight", d => d.type === "Movie" ? "bold" : "normal")
