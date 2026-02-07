@@ -111,15 +111,24 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
         .on("end", dragended))
       .on("click", (event, d) => onSelect(d));
 
+    // Scale node radius by eigenvectorCentrality
+    const centralityValues = data.nodes
+      .map(d => d.eigenvectorCentrality || 0)
+      .filter(v => v > 0);
+    const maxCentrality = d3.max(centralityValues) || 1;
+    const radiusScale = d3.scaleSqrt()
+      .domain([0, maxCentrality])
+      .range([8, 45]);
+
     node.append("circle")
-      .attr("r", d => d.type === "Movie" ? 35 : 15)
+      .attr("r", d => d.eigenvectorCentrality ? radiusScale(d.eigenvectorCentrality) : 8)
       .attr("fill", d => d.type === "Movie" ? "#f39c12" : "#3498db")
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
       .style("cursor", "pointer");
 
     node.append("text")
-      .attr("dy", d => d.type === "Movie" ? -40 : -20)
+      .attr("dy", d => -(d.eigenvectorCentrality ? radiusScale(d.eigenvectorCentrality) + 5 : 13))
       .attr("text-anchor", "middle")
       .style("font-size", d => d.type === "Movie" ? "16px" : "12px")
       .style("font-weight", d => d.type === "Movie" ? "bold" : "normal")
