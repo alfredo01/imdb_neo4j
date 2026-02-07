@@ -77,7 +77,7 @@ export default function App() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask me anything about movies... (e.g., Who directed Inception?)"
+            placeholder="Show the graph of Alfred Hitchcock's movies , with actors between 1950 and 1960"
             disabled={loading}
             style={{
               flex: 1,
