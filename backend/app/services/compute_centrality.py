@@ -51,7 +51,7 @@ class CentralityComputer:
             result = session.run("""
                 CALL gds.eigenvector.write('imdb-graph', {
                     writeProperty: 'eigenvectorCentrality',
-                    maxIterations: 20,
+                    maxIterations: 100,
                     concurrency: 1
                 })
                 YIELD nodePropertiesWritten, ranIterations
@@ -92,7 +92,7 @@ class CentralityComputer:
             result = session.run("""
                 CALL gds.pageRank.write('imdb-graph', {
                     writeProperty: 'pageRank',
-                    maxIterations: 20,
+                    maxIterations: 100,
                     dampingFactor: 0.85,
                     concurrency: 1
                 })
