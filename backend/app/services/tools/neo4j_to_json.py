@@ -17,8 +17,8 @@ def to_d3_format(results):
                     }
                     if node["type"] == "Movie" and "year" in value:
                         node["year"] = value["year"]
-                    if "pageRank" in value:
-                        node["pageRank"] = value["pageRank"]
+                    if "betweennessCentrality" in value:
+                        node["betweennessCentrality"] = value["betweennessCentrality"]
                     nodes[node_id] = node
 
             # Add relationships

@@ -107,6 +107,48 @@ class CentralityComputer:
             # Drop the graph projection
             session.run("CALL gds.graph.drop('imdb-graph')")
 
+    def compute_betweenness_centrality(self):
+        """
+        Compute betweenness centrality for all nodes.
+        Measures how often a node lies on shortest paths between other nodes.
+        Gives excellent differentiation between important and minor nodes.
+        Uses sampling to keep memory and computation manageable.
+        """
+        with self.driver.session() as session:
+            print("\nComputing Betweenness Centrality...")
+
+            # Drop existing graph projection if it exists
+            session.run("CALL gds.graph.drop('imdb-graph', false)")
+
+            # Create graph projection
+            session.run("""
+                CALL gds.graph.project(
+                    'imdb-graph',
+                    ['Person', 'Movie'],
+                    {
+                        ACTED_IN: {orientation: 'UNDIRECTED'},
+                        DIRECTED: {orientation: 'UNDIRECTED'}
+                    }
+                )
+            """)
+
+            # Compute betweenness centrality with sampling for performance
+            result = session.run("""
+                CALL gds.betweenness.write('imdb-graph', {
+                    writeProperty: 'betweennessCentrality',
+                    samplingSize: 1000,
+                    concurrency: 1
+                })
+                YIELD nodePropertiesWritten
+                RETURN nodePropertiesWritten
+            """)
+
+            record = result.single()
+            print(f"✓ Betweenness centrality computed for {record['nodePropertiesWritten']} nodes")
+
+            # Drop the graph projection
+            session.run("CALL gds.graph.drop('imdb-graph')")
+
     def compute_degree_centrality(self):
         """
         Compute degree centrality (simple connection count).
@@ -178,6 +220,18 @@ class CentralityComputer:
             for i, record in enumerate(result, 1):
                 print(f"  {i}. {record['name']}: {record['score']:.6f}")
 
+            # Betweenness - Top People
+            print("\nTop 10 People by Betweenness Centrality:")
+            result = session.run("""
+                MATCH (p:Person)
+                WHERE p.betweennessCentrality IS NOT NULL
+                RETURN p.name AS name, p.betweennessCentrality AS score
+                ORDER BY score DESC
+                LIMIT 10
+            """)
+            for i, record in enumerate(result, 1):
+                print(f"  {i}. {record['name']}: {record['score']:.2f}")
+
             # Degree - Statistics
             print("\nDegree Centrality Statistics:")
             result = session.run("""
@@ -203,6 +257,7 @@ if __name__ == "__main__":
         # Compute all centrality metrics
         computer.compute_eigenvector_centrality()
         computer.compute_pagerank()
+        computer.compute_betweenness_centrality()
         computer.compute_degree_centrality()
 
         # Show results

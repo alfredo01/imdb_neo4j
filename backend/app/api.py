@@ -19,6 +19,25 @@ print("Current Working Directory:", os.getcwd())  # Check where FastAPI is execu
 #from app.services.tools.cypher import cypher_qa_tool as generate_response
 from app.services.tools.cypher_to_d3 import cypher_qa_tool as generate_response
 from app.services.tools.neo4j_to_json import to_d3_format
+from app.services.graph import enhanced_graph as graph
+
+
+def enrich_with_pagerank(d3_data):
+    """Fetch betweennessCentrality directly from Neo4j and merge into D3 node data."""
+    node_ids = [n['id'] for n in d3_data['nodes']]
+    if not node_ids:
+        return d3_data
+    results = graph.query(
+        "UNWIND $ids AS nid "
+        "MATCH (n) WHERE n.personId = nid OR n.movieId = nid "
+        "RETURN coalesce(n.personId, n.movieId) AS id, n.betweennessCentrality AS betweennessCentrality",
+        {"ids": node_ids}
+    )
+    pr_map = {r['id']: r['betweennessCentrality'] for r in results if r['betweennessCentrality'] is not None}
+    for node in d3_data['nodes']:
+        if node['id'] in pr_map:
+            node['betweennessCentrality'] = pr_map[node['id']]
+    return d3_data
 
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -84,9 +103,9 @@ async def chat(
     # Generate response using the cypher_qa_tool  
     result = generate_response(messages)
     latest_intermediate_steps = result['intermediate_steps'][1]['context']
-    return to_d3_format(latest_intermediate_steps)
+    return enrich_with_pagerank(to_d3_format(latest_intermediate_steps))
     
 
 @api.get("/graph/json")
 def get_graph_json():
-    return to_d3_format(latest_intermediate_steps)
+    return enrich_with_pagerank(to_d3_format(latest_intermediate_steps))
