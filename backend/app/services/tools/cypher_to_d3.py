@@ -11,7 +11,7 @@ Schema:
 {schema}
 
 IMPORTANT - Centrality Filtering for Clean Visualizations:
-All nodes have centrality scores (pageRank, pageRank, degreeCentrality) to identify important/relevant nodes.
+All nodes have centrality scores (betweennessCentrality, betweennessCentrality, degreeCentrality) to identify important/relevant nodes.
 When queries might return many nodes (>30), filter to keep visualizations clean using ORDER BY with LIMIT.
 Always return graph patterns (nodes + relationships), not just nodes.
 
@@ -30,7 +30,7 @@ RETURN p, r, m
 MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WHERE m.title CONTAINS "Action"
 WITH p, r, m
-ORDER BY p.pageRank DESC, m.pageRank DESC
+ORDER BY p.betweennessCentrality DESC, m.betweennessCentrality DESC
 LIMIT 30
 RETURN p, r, m
 
@@ -38,7 +38,7 @@ RETURN p, r, m
 MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WHERE m.year = "1995"
 WITH p, r, m
-ORDER BY m.pageRank DESC
+ORDER BY m.betweennessCentrality DESC
 LIMIT 30
 RETURN p, r, m
 
@@ -46,7 +46,7 @@ RETURN p, r, m
 MATCH (p:Person)-[r:ACTED_IN|DIRECTED]->(m:Movie)
 WHERE m.year >= "2000"
 WITH p, r, m
-ORDER BY p.pageRank DESC
+ORDER BY p.betweennessCentrality DESC
 LIMIT 30
 RETURN p, r, m
 
