@@ -111,19 +111,17 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
         .on("end", dragended))
       .on("click", (event, d) => onSelect(d));
 
-    // Scale node radius by betweennessCentrality using log scale for better differentiation
+    // Scale node radius by betweennessCentrality
     const centralityValues = data.nodes
       .map(d => d.betweennessCentrality || 0)
       .filter(v => v > 0);
-    const minCentrality = d3.min(centralityValues) || 0.01;
     const maxCentrality = d3.max(centralityValues) || 1;
-    const radiusScale = d3.scaleLog()
-      .domain([minCentrality, maxCentrality])
-      .range([5, 50])
-      .clamp(true);
+    const radiusScale = d3.scaleSqrt()
+      .domain([0, maxCentrality])
+      .range([5, 50]);
 
     node.append("circle")
-      .attr("r", d => d.betweennessCentrality ? radiusScale(d.betweennessCentrality) : 5)
+      .attr("r", d => d.betweennessCentrality > 0 ? radiusScale(d.betweennessCentrality) : 5)
       .attr("fill", d => d.type === "Movie" ? "#f39c12" : "#3498db")
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
