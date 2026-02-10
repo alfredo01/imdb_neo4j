@@ -112,23 +112,22 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
       .on("click", (event, d) => onSelect(d));
 
     // Scale node radius by betweennessCentrality
-    const centralityValues = data.nodes
-      .map(d => d.betweennessCentrality || 0)
-      .filter(v => v > 0);
-    const maxCentrality = d3.max(centralityValues) || 1;
-    const radiusScale = d3.scaleSqrt()
-      .domain([0, maxCentrality])
-      .range([5, 50]);
+    const maxBetweenness = d3.max(data.nodes, d => d.betweennessCentrality || 0) || 1;
+    function getRadius(d) {
+      const val = d.betweennessCentrality;
+      if (!val || !isFinite(val) || val <= 0) return 5;
+      return 5 + 45 * Math.sqrt(val / maxBetweenness);
+    }
 
     node.append("circle")
-      .attr("r", d => d.betweennessCentrality > 0 ? radiusScale(d.betweennessCentrality) : 5)
+      .attr("r", d => getRadius(d))
       .attr("fill", d => d.type === "Movie" ? "#f39c12" : "#3498db")
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
       .style("cursor", "pointer");
 
     node.append("text")
-      .attr("dy", d => -(d.betweennessCentrality ? radiusScale(d.betweennessCentrality) + 5 : 13))
+      .attr("dy", d => -(getRadius(d) + 5))
       .attr("text-anchor", "middle")
       .style("font-size", d => d.type === "Movie" ? "16px" : "12px")
       .style("font-weight", d => d.type === "Movie" ? "bold" : "normal")
