@@ -100,9 +100,16 @@ async def chat(
     # Add current message
     messages.append({"role": "user", "content": payload.message})
 
-    # Generate response using the cypher_qa_tool  
+    # Generate response using the cypher_qa_tool
     result = generate_response(messages)
-    latest_intermediate_steps = result['intermediate_steps'][1]['context']
+    # Find the context in intermediate_steps (structure varies with return_direct)
+    steps = result.get('intermediate_steps', [])
+    context = []
+    for step in steps:
+        if isinstance(step, dict) and 'context' in step:
+            context = step['context']
+            break
+    latest_intermediate_steps = context
     return enrich_with_pagerank(to_d3_format(latest_intermediate_steps))
     
 
