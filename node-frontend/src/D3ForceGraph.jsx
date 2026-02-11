@@ -111,9 +111,11 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
         .on("end", dragended))
       .on("click", (event, d) => onSelect(d));
 
-    // Scale node radius by betweennessCentrality
-    const maxBetweenness = d3.max(data.nodes, d => d.betweennessCentrality || 0) || 1;
+    // Scale Person node radius by betweennessCentrality, fixed size for Movies
+    const personNodes = data.nodes.filter(d => d.type === "Person");
+    const maxBetweenness = d3.max(personNodes, d => d.betweennessCentrality || 0) || 1;
     function getRadius(d) {
+      if (d.type === "Movie") return 25;
       const val = d.betweennessCentrality;
       if (!val || !isFinite(val) || val <= 0) return 5;
       return 5 + 45 * Math.sqrt(val / maxBetweenness);
