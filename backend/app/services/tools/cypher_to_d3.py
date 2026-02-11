@@ -10,10 +10,11 @@ Return nodes and relationships that can be visualized as a graph.
 Schema:
 {schema}
 
-IMPORTANT - Centrality Filtering for Clean Visualizations:
-All nodes have centrality scores (betweennessCentrality, betweennessCentrality, degreeCentrality) to identify important/relevant nodes.
-When queries might return many nodes (>30), filter to keep visualizations clean using ORDER BY with LIMIT.
+CRITICAL - ALWAYS LIMIT RESULTS:
+All queries MUST include ORDER BY ... LIMIT 30 to prevent overloading the visualization.
+Use betweennessCentrality or degreeCentrality to order by importance.
 Always return graph patterns (nodes + relationships), not just nodes.
+NEVER generate a query without a LIMIT clause.
 
 IMPORTANT - Exclude the central node from results:
 When a query is about a specific person or movie (e.g. "Alfred Hitchcock's movies", "actors in Titanic"),
@@ -22,8 +23,11 @@ For example, if the question is about Alfred Hitchcock's movies, return the movi
 
 Examples with graph patterns:
 
-# Specific query - no filtering needed
+# Specific movie query - still limit results
 MATCH (p:Person)-[r:ACTED_IN]->(m:Movie {{title: "Titanic"}})
+WITH p, r, m
+ORDER BY p.betweennessCentrality DESC
+LIMIT 30
 RETURN p, r, m
 
 # Broad query - filter by centrality for top results
