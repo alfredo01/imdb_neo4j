@@ -102,17 +102,7 @@ async def chat(
 
     # Generate response using the cypher_qa_tool
     result = generate_response(messages)
-    # With return_direct=True, results are in 'result' key
-    context = result.get('result', [])
-    if isinstance(context, str):
-        # Fallback: check intermediate_steps
-        steps = result.get('intermediate_steps', [])
-        context = []
-        for step in steps:
-            if isinstance(step, dict) and 'context' in step:
-                context = step['context']
-                break
-    latest_intermediate_steps = context
+    latest_intermediate_steps = result['intermediate_steps'][1]['context']
     return enrich_with_pagerank(to_d3_format(latest_intermediate_steps))
     
 

@@ -70,9 +70,8 @@ cypher_qa = GraphCypherQAChain.from_llm(
     verbose=True,
     allow_dangerous_requests=True,
     cypher_prompt=CYPHER_GENERATION_PROMPT,
-    top_k=30,
-    return_intermediate_steps=True,
-    return_direct=True
+    top_k=100,
+    return_intermediate_steps=True
 )
 schema = graph.schema
 def cypher_qa_tool(question: str, schema=schema) -> str:
