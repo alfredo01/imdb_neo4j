@@ -1,4 +1,4 @@
-from langchain_neo4j import GraphCypherQAChain
+import re
 from langchain.prompts.prompt import PromptTemplate
 
 from app.services.llm import llm
@@ -64,18 +64,27 @@ CYPHER_GENERATION_PROMPT = PromptTemplate(
 )
 
 
-cypher_qa = GraphCypherQAChain.from_llm(
-    llm=llm,
-    graph=graph,
-    verbose=True,
-    allow_dangerous_requests=True,
-    cypher_prompt=CYPHER_GENERATION_PROMPT,
-    top_k=100,
-    return_intermediate_steps=True
-)
 schema = graph.schema
+
+
 def cypher_qa_tool(question: str, schema=schema) -> str:
     """
-    Function to generate a Cypher query based on the provided question and schema.
+    Generate Cypher with LLM, run it on Neo4j. No second LLM call.
     """
-    return cypher_qa.invoke({"query": question,"schema": schema})
+    # Step 1: Generate Cypher
+    prompt = CYPHER_GENERATION_PROMPT.format(schema=schema, question=question)
+    response = llm.invoke(prompt)
+    cypher = response.content.strip()
+    # Remove markdown code fences if present
+    cypher = re.sub(r"^```(?:cypher)?\s*", "", cypher)
+    cypher = re.sub(r"\s*```$", "", cypher)
+    # Safety: ensure LIMIT exists
+    if not re.search(r"\bLIMIT\b", cypher, re.IGNORECASE):
+        cypher = cypher.rstrip().rstrip(";") + "\nLIMIT 30"
+    print("Generated Cypher:\n" + cypher + "\n")
+
+    # Step 2: Run on Neo4j directly
+    results = graph.query(cypher)
+    print("Returned " + str(len(results)) + " records")
+
+    return {"intermediate_steps": [{"query": cypher}, {"context": results}]}
