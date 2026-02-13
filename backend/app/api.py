@@ -103,9 +103,9 @@ async def chat(
     # Generate response using the cypher_qa_tool
     result = generate_response(messages)
     latest_intermediate_steps = result['intermediate_steps'][1]['context']
-    return enrich_with_pagerank(to_d3_format(latest_intermediate_steps))
+    return to_d3_format(latest_intermediate_steps)
     
 
 @api.get("/graph/json")
 def get_graph_json():
-    return enrich_with_pagerank(to_d3_format(latest_intermediate_steps))
+    return to_d3_format(latest_intermediate_steps)
