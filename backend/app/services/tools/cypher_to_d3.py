@@ -11,7 +11,7 @@ Schema:
 {schema}
 
 CRITICAL - ALWAYS LIMIT RESULTS:
-All queries MUST include ORDER BY ... LIMIT 30 to prevent overloading the visualization.
+All queries MUST include ORDER BY ... LIMIT 60 to prevent overloading the visualization.
 Use betweennessCentrality or degreeCentrality to order by importance.
 Always return graph patterns (nodes + relationships), not just nodes.
 NEVER generate a query without a LIMIT clause.
@@ -27,7 +27,7 @@ Examples with graph patterns:
 MATCH (p:Person)-[r:ACTED_IN]->(m:Movie {{title: "Titanic"}})
 WITH p, r, m
 ORDER BY p.betweennessCentrality DESC
-LIMIT 30
+LIMIT 60
 RETURN p, r, m
 
 # Broad query - filter by centrality for top results
@@ -35,7 +35,7 @@ MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WHERE m.title CONTAINS "Action"
 WITH p, r, m
 ORDER BY p.betweennessCentrality DESC, m.betweennessCentrality DESC
-LIMIT 30
+LIMIT 60
 RETURN p, r, m
 
 # Year-based query - filter most important movies
@@ -43,7 +43,7 @@ MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WHERE m.year = "1995"
 WITH p, r, m
 ORDER BY m.betweennessCentrality DESC
-LIMIT 30
+LIMIT 60
 RETURN p, r, m
 
 # Multiple relationship types with filtering
@@ -51,7 +51,7 @@ MATCH (p:Person)-[r:ACTED_IN|DIRECTED]->(m:Movie)
 WHERE m.year >= "2000"
 WITH p, r, m
 ORDER BY p.betweennessCentrality DESC
-LIMIT 30
+LIMIT 60
 RETURN p, r, m
 
 Question:
@@ -80,7 +80,7 @@ def cypher_qa_tool(question: str, schema=schema) -> str:
     cypher = re.sub(r"\s*```$", "", cypher)
     # Safety: ensure LIMIT exists
     if not re.search(r"\bLIMIT\b", cypher, re.IGNORECASE):
-        cypher = cypher.rstrip().rstrip(";") + "\nLIMIT 30"
+        cypher = cypher.rstrip().rstrip(";") + "\nLIMIT 60"
     print("Generated Cypher:\n" + cypher + "\n")
 
     # Step 2: Run on Neo4j directly
