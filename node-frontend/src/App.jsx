@@ -5,7 +5,7 @@ import axios from "axios";
 
 export default function App() {
   const [data, setData] = useState(null);
-  const [query, setQuery] = useState("Show the graph of Alfred Hitchcock's movies, with actors between 1950 and 1960");
+  const [query, setQuery] = useState("Show the graph of Alfred Hitchcock movies, with actors between 1950 and 1960");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
