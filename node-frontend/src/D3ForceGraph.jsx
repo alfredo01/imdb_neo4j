@@ -123,7 +123,7 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
 
     node.append("circle")
       .attr("r", d => getRadius(d))
-      .attr("fill", d => d.type === "Movie" ? "#f39c12" : "#3498db")
+      .attr("fill", d => d.type === "Movie" ? "#8E44AD" : "#D4A843")
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
       .style("cursor", "pointer");
@@ -202,18 +202,18 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
         <h2 style={{ margin: 0 }}>Movie Timeline Graph</h2>
         <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#f39c12" }}></div>
+            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#8E44AD" }}></div>
             <span>Movies</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#3498db" }}></div>
+            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#D4A843" }}></div>
             <span>People</span>
           </div>
           <button
             onClick={() => setShowControls(!showControls)}
             style={{
               padding: "8px 16px",
-              background: "#3498db",
+              background: "#8E44AD",
               color: "white",
               border: "none",
               borderRadius: "4px",
@@ -237,7 +237,7 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
         }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
             <label style={{ fontWeight: "bold", fontSize: "14px" }}>
-              Link Distance: <span style={{ color: "#3498db" }}>{linkDistance}</span>
+              Link Distance: <span style={{ color: "#8E44AD" }}>{linkDistance}</span>
             </label>
             <input
               type="range"
@@ -252,7 +252,7 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
             <label style={{ fontWeight: "bold", fontSize: "14px" }}>
-              Charge Strength: <span style={{ color: "#3498db" }}>{chargeStrength}</span>
+              Charge Strength: <span style={{ color: "#8E44AD" }}>{chargeStrength}</span>
             </label>
             <input
               type="range"
@@ -267,7 +267,7 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
             <label style={{ fontWeight: "bold", fontSize: "14px" }}>
-              Collision Radius: <span style={{ color: "#3498db" }}>{collideRadius}</span>
+              Collision Radius: <span style={{ color: "#8E44AD" }}>{collideRadius}</span>
             </label>
             <input
               type="range"
@@ -282,7 +282,7 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
             <label style={{ fontWeight: "bold", fontSize: "14px" }}>
-              Position Force: <span style={{ color: "#3498db" }}>{positionStrength.toFixed(2)}</span>
+              Position Force: <span style={{ color: "#8E44AD" }}>{positionStrength.toFixed(2)}</span>
             </label>
             <input
               type="range"
