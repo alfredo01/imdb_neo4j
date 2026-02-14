@@ -132,7 +132,7 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
       .attr("r", d => getRadius(d))
       .attr("fill", d => {
         if (d.type === "Movie") return "#8E44AD";
-        if (directorIds.has(d.id)) return "#E8A817";
+        if (directorIds.has(d.id)) return "#FF8C00";
         return "#D4A843";
       })
       .attr("stroke", "#fff")
@@ -217,7 +217,7 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
             <span>Movies</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#E8A817" }}></div>
+            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#FF8C00" }}></div>
             <span>Directors</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
