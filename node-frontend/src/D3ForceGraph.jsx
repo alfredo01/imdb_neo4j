@@ -6,7 +6,7 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
   const containerRef = useRef();
   const simulationRef = useRef();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
 
   // Force parameters state
   const [linkDistance, setLinkDistance] = useState(100);
