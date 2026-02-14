@@ -129,7 +129,7 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
       .style("cursor", "pointer");
 
     node.append("text")
-      .attr("dy", d => -(getRadius(d) + 5))
+      .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
       .style("font-size", d => d.type === "Movie" ? "16px" : "12px")
       .style("font-weight", d => d.type === "Movie" ? "bold" : "normal")
