@@ -38,7 +38,7 @@ export default function App() {
         console.warn("Response missing nodes or links:", result);
       }
 
-      setQuery("");
+      // Keep query in the text box for editing
     } catch (err) {
       console.error("Failed to fetch graph data:", err);
       setError(`Failed to get response from the API: ${err.message}`);
