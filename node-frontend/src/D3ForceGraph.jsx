@@ -143,14 +143,6 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
       .attr("transform", `translate(0,${height - margin.bottom})`)
       .call(axis);
 
-    // Add axis label
-    container.append("text")
-      .attr("x", width / 2)
-      .attr("y", height - margin.bottom + 40)
-      .attr("text-anchor", "middle")
-      .style("font-size", "14px")
-      .style("font-weight", "bold")
-      .text("Year");
 
     // Update positions on simulation tick
     simulation.on("tick", () => {
