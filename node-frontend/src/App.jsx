@@ -5,20 +5,10 @@ import axios from "axios";
 
 export default function App() {
   const [data, setData] = useState(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState("Show the graph of Alfred Hitchcock's movies, with actors between 1950 and 1960");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
-
-  useEffect(() => {
-    // Load graph data from public/data/graph_data.json
-    d3.json("/data/graph_data.json")
-      .then(graphData => setData(graphData))
-      .catch(err => {
-        console.error("Failed to load graph data:", err);
-        setData(null);
-      });
-  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -132,7 +122,7 @@ export default function App() {
             height: "100%",
             width: "100%"
           }}>
-            <p>Loading graph data...</p>
+            <p>Click Search to explore the graph</p>
           </div>
         )}
       </div>
