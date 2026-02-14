@@ -62,6 +62,13 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
       }
     });
 
+    // Identify directors from DIRECTED links (before D3 mutates link objects)
+    const directorIds = new Set(
+      data.links
+        .filter(l => l.label === "DIRECTED")
+        .map(l => typeof l.source === "object" ? l.source.id : l.source)
+    );
+
     // Create force simulation with state-driven parameters
     const simulation = d3.forceSimulation(data.nodes)
       .force("link", d3.forceLink(data.links).id(d => d.id).distance(linkDistance))
@@ -123,7 +130,11 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
 
     node.append("circle")
       .attr("r", d => getRadius(d))
-      .attr("fill", d => d.type === "Movie" ? "#8E44AD" : "#D4A843")
+      .attr("fill", d => {
+        if (d.type === "Movie") return "#8E44AD";
+        if (directorIds.has(d.id)) return "#E8A817";
+        return "#D4A843";
+      })
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
       .style("cursor", "pointer");
@@ -206,8 +217,12 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
             <span>Movies</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#E8A817" }}></div>
+            <span>Directors</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#D4A843" }}></div>
-            <span>People</span>
+            <span>Actors</span>
           </div>
           <button
             onClick={() => setShowControls(!showControls)}
