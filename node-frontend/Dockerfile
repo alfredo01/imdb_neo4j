@@ -5,7 +5,7 @@ ENV REACT_APP_API_URL=$REACT_APP_API_URL
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npm run build
+RUN GENERATE_SOURCEMAP=false npm run build
 
 FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html
