@@ -74,13 +74,13 @@ def cypher_qa_tool(question: str, schema=schema) -> str:
     """
     # Step 0: Map entities (fix misspellings via full-text index)
     if isinstance(question, list):
-        # question is a list of message dicts from the chat API
         last_user_msg = question[-1]["content"]
-        corrected = map_entities(last_user_msg)
-        if corrected != last_user_msg:
-            question[-1]["content"] = corrected
+        mapping = map_entities(last_user_msg)
+        question[-1]["content"] = mapping["corrected"]
     else:
-        question = map_entities(question)
+        mapping = map_entities(question)
+        question = mapping["corrected"]
+    entities = mapping["entities"]
 
     # Step 1: Generate Cypher
     prompt = CYPHER_GENERATION_PROMPT.format(schema=schema, question=question)
@@ -98,4 +98,7 @@ def cypher_qa_tool(question: str, schema=schema) -> str:
     results = graph.query(cypher)
     print("Returned " + str(len(results)) + " records")
 
-    return {"intermediate_steps": [{"query": cypher}, {"context": results}]}
+    return {
+        "intermediate_steps": [{"query": cypher}, {"context": results}],
+        "entities": entities
+    }

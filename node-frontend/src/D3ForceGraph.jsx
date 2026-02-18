@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
-function D3ForceGraph({ data, onSelect = () => {} }) {
+function D3ForceGraph({ data, entities, onSelect = () => {} }) {
   const svgRef = useRef();
   const containerRef = useRef();
   const simulationRef = useRef();
@@ -210,7 +210,14 @@ function D3ForceGraph({ data, onSelect = () => {} }) {
         justifyContent: "space-between",
         alignItems: "center"
       }}>
-        <h2 style={{ margin: 0 }}>Movie Timeline Graph</h2>
+        <h2 style={{ margin: 0 }}>
+          Movie Timeline Graph
+          {entities && (entities.persons.length > 0 || entities.movies.length > 0) && (
+            <span style={{ fontSize: "14px", fontWeight: "normal", marginLeft: "15px", color: "#555" }}>
+              {[...entities.persons, ...entities.movies].join(", ")}
+            </span>
+          )}
+        </h2>
         <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#8E44AD" }}></div>

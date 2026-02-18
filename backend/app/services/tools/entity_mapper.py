@@ -39,24 +39,39 @@ def _fuzzy_match(name: str, index_name: str, property_name: str) -> Optional[str
     return None
 
 
-def map_entities(question: str) -> str:
-    """Extract entities from the question, fuzzy-match them against Neo4j, and return the corrected question."""
+def map_entities(question: str) -> dict:
+    """Extract entities from the question, fuzzy-match them against Neo4j.
+    Returns {"corrected": str, "entities": {"persons": [...], "movies": [...]}}
+    where entities lists contain the matched (corrected) names."""
     entities = _extract_entities(question)
     corrected = question
+    matched_persons = []
+    matched_movies = []
 
     for person in entities.get("persons", []):
         match = _fuzzy_match(person, "personNameIndex", "name")
-        if match and match.lower() != person.lower():
-            corrected = corrected.replace(person, match)
-            print(f"Entity mapped: '{person}' -> '{match}'")
+        if match:
+            matched_persons.append(match)
+            if match.lower() != person.lower():
+                corrected = corrected.replace(person, match)
+                print(f"Entity mapped: '{person}' -> '{match}'")
+        else:
+            matched_persons.append(person)
 
     for movie in entities.get("movies", []):
         match = _fuzzy_match(movie, "movieTitleIndex", "title")
-        if match and match.lower() != movie.lower():
-            corrected = corrected.replace(movie, match)
-            print(f"Entity mapped: '{movie}' -> '{match}'")
+        if match:
+            matched_movies.append(match)
+            if match.lower() != movie.lower():
+                corrected = corrected.replace(movie, match)
+                print(f"Entity mapped: '{movie}' -> '{match}'")
+        else:
+            matched_movies.append(movie)
 
     if corrected != question:
         print(f"Corrected question: {corrected}")
 
-    return corrected
+    return {
+        "corrected": corrected,
+        "entities": {"persons": matched_persons, "movies": matched_movies}
+    }

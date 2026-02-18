@@ -5,6 +5,7 @@ import axios from "axios";
 
 export default function App() {
   const [data, setData] = useState(null);
+  const [entities, setEntities] = useState(null);
   const [query, setQuery] = useState("Show the graph of Alfred Hitchcock movies, with actors between 1950 and 1960");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -29,6 +30,11 @@ export default function App() {
 
       // Update messages
       setMessages([...messages, { user: query, bot: JSON.stringify(result) }]);
+
+      // Store extracted entities
+      if (result.entities) {
+        setEntities(result.entities);
+      }
 
       // Update graph data if nodes and links exist
       if (result.nodes && result.links) {
@@ -113,7 +119,7 @@ export default function App() {
       {/* Graph Visualization */}
       <div style={{ flex: 1, overflow: "hidden" }}>
         {data ? (
-          <D3ForceGraph data={data} onSelect={handleSelect} />
+          <D3ForceGraph data={data} entities={entities} onSelect={handleSelect} />
         ) : (
           <div style={{
             display: "flex",

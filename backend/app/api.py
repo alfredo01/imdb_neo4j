@@ -103,7 +103,9 @@ async def chat(
     # Generate response using the cypher_qa_tool
     result = generate_response(messages)
     latest_intermediate_steps = result['intermediate_steps'][1]['context']
-    return to_d3_format(latest_intermediate_steps)
+    d3_data = to_d3_format(latest_intermediate_steps)
+    d3_data["entities"] = result.get("entities", {"persons": [], "movies": []})
+    return d3_data
     
 
 @api.get("/graph/json")
