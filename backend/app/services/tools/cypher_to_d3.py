@@ -73,7 +73,14 @@ def cypher_qa_tool(question: str, schema=schema) -> str:
     Generate Cypher with LLM, run it on Neo4j. No second LLM call.
     """
     # Step 0: Map entities (fix misspellings via full-text index)
-    question = map_entities(question)
+    if isinstance(question, list):
+        # question is a list of message dicts from the chat API
+        last_user_msg = question[-1]["content"]
+        corrected = map_entities(last_user_msg)
+        if corrected != last_user_msg:
+            question[-1]["content"] = corrected
+    else:
+        question = map_entities(question)
 
     # Step 1: Generate Cypher
     prompt = CYPHER_GENERATION_PROMPT.format(schema=schema, question=question)
