@@ -3,6 +3,7 @@ from langchain.prompts.prompt import PromptTemplate
 
 from app.services.llm import llm
 from app.services.graph import enhanced_graph as graph
+from app.services.tools.entity_mapper import map_entities
 
 CYPHER_GENERATION_TEMPLATE = """You are a Cypher expert. Always generate Cypher queries using graph patterns like (a)-[r]->(b).
 Return nodes and relationships that can be visualized as a graph.
@@ -71,6 +72,9 @@ def cypher_qa_tool(question: str, schema=schema) -> str:
     """
     Generate Cypher with LLM, run it on Neo4j. No second LLM call.
     """
+    # Step 0: Map entities (fix misspellings via full-text index)
+    question = map_entities(question)
+
     # Step 1: Generate Cypher
     prompt = CYPHER_GENERATION_PROMPT.format(schema=schema, question=question)
     response = llm.invoke(prompt)
