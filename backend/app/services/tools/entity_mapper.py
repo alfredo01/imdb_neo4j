@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 from app.services.llm import llm
 from app.services.graph import enhanced_graph as graph
 
@@ -25,7 +26,7 @@ def _extract_entities(question: str) -> dict:
         return {"persons": [], "movies": []}
 
 
-def _fuzzy_match(name: str, index_name: str, property_name: str) -> str | None:
+def _fuzzy_match(name: str, index_name: str, property_name: str) -> Optional[str]:
     """Query a Neo4j full-text index with fuzzy matching. Returns the best match or None."""
     results = graph.query(
         f"CALL db.index.fulltext.queryNodes('{index_name}', $query) "
