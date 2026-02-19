@@ -72,25 +72,23 @@ def cypher_qa_tool(question: str, schema=schema) -> str:
     """
     Generate Cypher with LLM, run it on Neo4j. No second LLM call.
     """
-    # Step 0: Extract the user question text
+    # Step 0: Map entities (fix misspellings via full-text index)
     if isinstance(question, list):
-        user_question = question[-1]["content"]
+        last_user_msg = question[-1]["content"]
+        mapping = map_entities(last_user_msg)
+        question[-1]["content"] = mapping["corrected"]
     else:
-        user_question = question
-
-    # Step 1: Map entities (fix misspellings via full-text index)
-    mapping = map_entities(user_question)
-    user_question = mapping["corrected"]
+        mapping = map_entities(question)
+        question = mapping["corrected"]
     entities = mapping["entities"]
 
-    # Step 2: Generate Cypher
-    prompt = CYPHER_GENERATION_PROMPT.format(schema=schema, question=user_question)
+    # Step 1: Generate Cypher
+    prompt = CYPHER_GENERATION_PROMPT.format(schema=schema, question=question)
     response = llm.invoke(prompt)
     cypher = response.content.strip()
     # Remove markdown code fences if present
-    cypher = re.sub(r"^```(?:cypher)?\s*", "", cypher, flags=re.MULTILINE)
-    cypher = re.sub(r"\s*```\s*$", "", cypher, flags=re.MULTILINE)
-    cypher = cypher.strip()
+    cypher = re.sub(r"^```(?:cypher)?\s*", "", cypher)
+    cypher = re.sub(r"\s*```$", "", cypher)
     # Safety: ensure LIMIT exists
     if not re.search(r"\bLIMIT\b", cypher, re.IGNORECASE):
         cypher = cypher.rstrip().rstrip(";") + "\nLIMIT 60"
