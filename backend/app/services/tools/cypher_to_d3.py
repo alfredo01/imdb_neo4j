@@ -72,18 +72,19 @@ def cypher_qa_tool(question: str, schema=schema) -> str:
     """
     Generate Cypher with LLM, run it on Neo4j. No second LLM call.
     """
-    # Step 0: Map entities (fix misspellings via full-text index)
+    # Step 0: Extract the user question text
     if isinstance(question, list):
-        last_user_msg = question[-1]["content"]
-        mapping = map_entities(last_user_msg)
-        question[-1]["content"] = mapping["corrected"]
+        user_question = question[-1]["content"]
     else:
-        mapping = map_entities(question)
-        question = mapping["corrected"]
+        user_question = question
+
+    # Step 1: Map entities (fix misspellings via full-text index)
+    mapping = map_entities(user_question)
+    user_question = mapping["corrected"]
     entities = mapping["entities"]
 
-    # Step 1: Generate Cypher
-    prompt = CYPHER_GENERATION_PROMPT.format(schema=schema, question=question)
+    # Step 2: Generate Cypher
+    prompt = CYPHER_GENERATION_PROMPT.format(schema=schema, question=user_question)
     response = llm.invoke(prompt)
     cypher = response.content.strip()
     # Remove markdown code fences if present
