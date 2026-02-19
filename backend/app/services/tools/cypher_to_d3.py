@@ -88,8 +88,9 @@ def cypher_qa_tool(question: str, schema=schema) -> str:
     response = llm.invoke(prompt)
     cypher = response.content.strip()
     # Remove markdown code fences if present
-    cypher = re.sub(r"^```(?:cypher)?\s*", "", cypher)
-    cypher = re.sub(r"\s*```$", "", cypher)
+    cypher = re.sub(r"^```(?:cypher)?\s*", "", cypher, flags=re.MULTILINE)
+    cypher = re.sub(r"\s*```\s*$", "", cypher, flags=re.MULTILINE)
+    cypher = cypher.strip()
     # Safety: ensure LIMIT exists
     if not re.search(r"\bLIMIT\b", cypher, re.IGNORECASE):
         cypher = cypher.rstrip().rstrip(";") + "\nLIMIT 60"
