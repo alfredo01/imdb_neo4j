@@ -41,13 +41,13 @@ class EmbeddingComputer:
             session.run(f"CALL gds.graph.drop('{GRAPH_NAME}', false)")
 
             # Create graph projection filtered by pageRank > 2
-            print("Creating graph projection (nodes with pageRank > 2)...")
+            print("Creating graph projection (nodes with pageRank > 1)...")
             session.run(f"""
                 CALL gds.graph.project.cypher(
                     '{GRAPH_NAME}',
-                    'MATCH (n) WHERE n.pageRank > 2 RETURN id(n) AS id',
+                    'MATCH (n) WHERE n.pageRank > 1 RETURN id(n) AS id',
                     'MATCH (n)-[r]-(m)
-                     WHERE n.pageRank > 2 AND m.pageRank > 2
+                     WHERE n.pageRank > 1 AND m.pageRank > 1
                      RETURN id(n) AS source, id(m) AS target, type(r) AS type'
                 )
             """)
