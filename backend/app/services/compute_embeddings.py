@@ -40,24 +40,26 @@ class EmbeddingComputer:
             # Drop existing graph projection if it exists
             session.run(f"CALL gds.graph.drop('{GRAPH_NAME}', false)")
 
-            # Create graph projection with all relationship types
-            print("Creating graph projection with all relationship types...")
+            # Create graph projection filtered by pageRank > 2
+            print("Creating graph projection (nodes with pageRank > 2)...")
             session.run(f"""
-                CALL gds.graph.project(
+                CALL gds.graph.project.cypher(
                     '{GRAPH_NAME}',
-                    ['Person', 'Movie'],
-                    {{
-                        ACTED_IN: {{orientation: 'UNDIRECTED'}},
-                        DIRECTED: {{orientation: 'UNDIRECTED'}},
-                        PRODUCED: {{orientation: 'UNDIRECTED'}},
-                        WROTE: {{orientation: 'UNDIRECTED'}},
-                        COMPOSED: {{orientation: 'UNDIRECTED'}},
-                        EDITED: {{orientation: 'UNDIRECTED'}},
-                        CINEMATOGRAPHER: {{orientation: 'UNDIRECTED'}}
-                    }}
+                    'MATCH (n) WHERE n.pageRank > 2 RETURN id(n) AS id',
+                    'MATCH (n)-[r]-(m)
+                     WHERE n.pageRank > 2 AND m.pageRank > 2
+                     RETURN id(n) AS source, id(m) AS target, type(r) AS type'
                 )
             """)
-            print("Graph projection created.")
+
+            # Count projected nodes
+            result = session.run(f"""
+                CALL gds.graph.list('{GRAPH_NAME}')
+                YIELD nodeCount, relationshipCount
+                RETURN nodeCount, relationshipCount
+            """)
+            record = result.single()
+            print(f"Graph projection created: {{record['nodeCount']}} nodes, {{record['relationshipCount']}} relationships")
 
             # Compute FastRP embeddings
             # iterationWeights: [0.0, 1.0, 1.0]
