@@ -40,26 +40,24 @@ class EmbeddingComputer:
             # Drop existing graph projection if it exists
             session.run(f"CALL gds.graph.drop('{GRAPH_NAME}', false)")
 
-            # Create graph projection filtered by pageRank > 2
-            print("Creating graph projection (nodes with pageRank > 1)...")
+            # Create graph projection with ALL nodes and all relationship types
+            print("Creating graph projection (full graph)...")
             session.run(f"""
-                CALL gds.graph.project.cypher(
+                CALL gds.graph.project(
                     '{GRAPH_NAME}',
-                    'MATCH (n) WHERE n.pageRank > 1 RETURN id(n) AS id',
-                    'MATCH (n)-[r]-(m)
-                     WHERE n.pageRank > 1 AND m.pageRank > 1
-                     RETURN id(n) AS source, id(m) AS target, type(r) AS type'
+                    ['Person', 'Movie'],
+                    {{
+                        ACTED_IN: {{orientation: 'UNDIRECTED'}},
+                        DIRECTED: {{orientation: 'UNDIRECTED'}},
+                        PRODUCED: {{orientation: 'UNDIRECTED'}},
+                        WROTE: {{orientation: 'UNDIRECTED'}},
+                        COMPOSED: {{orientation: 'UNDIRECTED'}},
+                        EDITED: {{orientation: 'UNDIRECTED'}},
+                        CINEMATOGRAPHER: {{orientation: 'UNDIRECTED'}}
+                    }}
                 )
             """)
-
-            # Count projected nodes
-            result = session.run(f"""
-                CALL gds.graph.list('{GRAPH_NAME}')
-                YIELD nodeCount, relationshipCount
-                RETURN nodeCount, relationshipCount
-            """)
-            record = result.single()
-            print(f"Graph projection created: {{record['nodeCount']}} nodes, {{record['relationshipCount']}} relationships")
+            print("Graph projection created.")
 
             # Compute FastRP embeddings
             # iterationWeights: [0.0, 1.0, 1.0]
@@ -159,7 +157,7 @@ if __name__ == "__main__":
     try:
         print("Starting FastRP embedding computation...\n")
 
-        computer.compute_fastrp_embeddings(dimension=128)
+        computer.compute_fastrp_embeddings(dimension=32)
         computer.show_statistics()
 
         print("\n" + "=" * 60)
