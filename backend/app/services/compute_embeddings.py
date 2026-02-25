@@ -119,15 +119,33 @@ class EmbeddingComputer:
             if record:
                 print(f"Embedding dimension: {record['dim']}")
 
-            # Sample similarity: find movies most similar to a well-known movie
+            # Check Titanic's embedding
+            print("\nChecking Titanic (1997) embedding:")
+            result = session.run("""
+                MATCH (m:Movie {title: 'Titanic', year: '1997'})
+                WHERE m.embedding IS NOT NULL
+                WITH m, m.embedding AS emb,
+                     reduce(s = 0.0, x IN m.embedding | s + x*x) AS norm
+                RETURN m.title AS title, size(emb) AS dim, norm
+            """)
+            record = result.single()
+            if record:
+                print(f"  dim={record['dim']}, norm={record['norm']:.6f}")
+                if record['norm'] == 0.0:
+                    print("  WARNING: Titanic has a zero embedding (isolated node in projection)")
+            else:
+                print("  Titanic (1997) not found or has no embedding")
+
+            # Sample similarity: filter out zero-norm embeddings
             print("\nTop 5 movies most similar to 'Titanic' (by cosine similarity):")
             result = session.run("""
-                MATCH (m1:Movie {title: 'Titanic'})
-                WHERE m1.embedding IS NOT NULL AND m1.year = '1997'
+                MATCH (m1:Movie {title: 'Titanic', year: '1997'})
+                WHERE m1.embedding IS NOT NULL
                 MATCH (m2:Movie)
                 WHERE m2.embedding IS NOT NULL AND m1 <> m2
                 WITH m1, m2,
                      gds.similarity.cosine(m1.embedding, m2.embedding) AS similarity
+                WHERE similarity IS NOT NULL AND NOT isNaN(similarity)
                 ORDER BY similarity DESC
                 LIMIT 5
                 RETURN m2.title AS title, m2.year AS year, similarity
@@ -144,6 +162,7 @@ class EmbeddingComputer:
                 WHERE p2.embedding IS NOT NULL AND p1 <> p2
                 WITH p1, p2,
                      gds.similarity.cosine(p1.embedding, p2.embedding) AS similarity
+                WHERE similarity IS NOT NULL AND NOT isNaN(similarity)
                 ORDER BY similarity DESC
                 LIMIT 5
                 RETURN p2.name AS name, similarity
