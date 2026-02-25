@@ -20,6 +20,12 @@ When a query might return many nodes (>30), filter to the most relevant using:
 This ensures visualizations remain clear by showing only the most important/connected nodes.
 For shortest path queries or specific entity lookups, no filtering is needed.
 
+IMPORTANT - Exclude the central node:
+When a query is about a specific person or movie (e.g. "Alfred Hitchcock's movies", "actors in Titanic"),
+do NOT return the central/queried entity itself in the results. Only return the connected nodes.
+For example, if the question is about Alfred Hitchcock's movies, exclude Alfred Hitchcock from the returned nodes.
+If the question is about actors in Titanic, exclude Titanic from the returned nodes.
+
 Note: Do not include any explanations or apologies in your responses.
 Do not respond to any questions that might ask anything else than for you to construct a Cypher statement.
 Do not include any text except the generated Cypher statement.

@@ -70,7 +70,8 @@ class EmbeddingComputer:
                     embeddingDimension: {dimension},
                     iterationWeights: [0.0, 1.0, 1.0],
                     writeProperty: 'embedding',
-                    concurrency: 1
+                    concurrency: 1,
+                    sudo: true
                 }})
                 YIELD nodePropertiesWritten
                 RETURN nodePropertiesWritten
