@@ -153,23 +153,24 @@ class EmbeddingComputer:
             for i, record in enumerate(result, 1):
                 print(f"  {i}. {record['title']} ({record['year']}): {record['similarity']:.4f}")
 
-            # Sample similarity for a person (filter to notable persons with pageRank > 1)
-            print("\nTop 5 notable persons most similar to 'Steven Spielberg':")
-            result = session.run("""
-                MATCH (p1:Person {name: 'Steven Spielberg'})
-                WHERE p1.embedding IS NOT NULL
-                MATCH (p2:Person)
-                WHERE p2.embedding IS NOT NULL AND p1 <> p2
-                  AND p2.pageRank > 1
-                WITH p1, p2,
-                     gds.similarity.cosine(p1.embedding, p2.embedding) AS similarity
-                WHERE similarity IS NOT NULL AND NOT isNaN(similarity)
-                ORDER BY similarity DESC
-                LIMIT 5
-                RETURN p2.name AS name, similarity
-            """)
-            for i, record in enumerate(result, 1):
-                print(f"  {i}. {record['name']}: {record['similarity']:.4f}")
+            # Sample similarity for a person (filter to top persons by pageRank)
+            for threshold in [10, 50, 100]:
+                print(f"\nTop 5 persons most similar to 'Steven Spielberg' (pageRank > {threshold}):")
+                result = session.run("""
+                    MATCH (p1:Person {name: 'Steven Spielberg'})
+                    WHERE p1.embedding IS NOT NULL
+                    MATCH (p2:Person)
+                    WHERE p2.embedding IS NOT NULL AND p1 <> p2
+                      AND p2.pageRank > $threshold
+                    WITH p1, p2,
+                         gds.similarity.cosine(p1.embedding, p2.embedding) AS similarity
+                    WHERE similarity IS NOT NULL AND NOT isNaN(similarity)
+                    ORDER BY similarity DESC
+                    LIMIT 5
+                    RETURN p2.name AS name, p2.pageRank AS pr, similarity
+                """, {"threshold": threshold})
+                for i, record in enumerate(result, 1):
+                    print(f"  {i}. {record['name']} (pr={record['pr']:.1f}): {record['similarity']:.4f}")
 
 
 if __name__ == "__main__":
