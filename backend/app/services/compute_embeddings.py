@@ -139,7 +139,7 @@ class EmbeddingComputer:
             # Sample similarity: filter out zero-norm embeddings
             print("\nTop 5 movies most similar to 'Titanic' (by cosine similarity):")
             result = session.run("""
-                MATCH (m1:Movie {title: 'Titanic', year: '1997'})
+                MATCH (m1:Movie {title: 'Touchez pas au grisbi'})
                 WHERE m1.embedding IS NOT NULL
                 MATCH (m2:Movie)
                 WHERE m2.embedding IS NOT NULL AND m1 <> m2
