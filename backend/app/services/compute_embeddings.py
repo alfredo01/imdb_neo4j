@@ -153,13 +153,14 @@ class EmbeddingComputer:
             for i, record in enumerate(result, 1):
                 print(f"  {i}. {record['title']} ({record['year']}): {record['similarity']:.4f}")
 
-            # Sample similarity for a person
-            print("\nTop 5 persons most similar to 'Steven Spielberg':")
+            # Sample similarity for a person (filter to notable persons with pageRank > 1)
+            print("\nTop 5 notable persons most similar to 'Steven Spielberg':")
             result = session.run("""
                 MATCH (p1:Person {name: 'Steven Spielberg'})
                 WHERE p1.embedding IS NOT NULL
                 MATCH (p2:Person)
                 WHERE p2.embedding IS NOT NULL AND p1 <> p2
+                  AND p2.pageRank > 1
                 WITH p1, p2,
                      gds.similarity.cosine(p1.embedding, p2.embedding) AS similarity
                 WHERE similarity IS NOT NULL AND NOT isNaN(similarity)
