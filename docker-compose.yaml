@@ -27,13 +27,8 @@ services:
       - ./neo4j/raw_data:/var/lib/neo4j/import
     networks:
       - movies_network
-    restart: always
-    healthcheck:
-      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "adminadmin", "RETURN 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 40
-      start_period: 60s
+    restart:
+      always
 
   #streamlit:
   #  build:
@@ -59,8 +54,7 @@ services:
       dockerfile: Dockerfile
     container_name: fastapi_server
     depends_on:
-      neo4j:
-        condition: service_healthy
+      - neo4j
     networks:
       - movies_network
     working_dir: /app
