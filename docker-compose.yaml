@@ -62,7 +62,8 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - ./streamlit:/app/streamlit      
+      - ./streamlit:/app/streamlit
+      - ./neo4j/raw_data:/app/raw_data:ro
     env_file:
       - .env
     restart: unless-stopped
