@@ -36,9 +36,10 @@ ROLES_CSV = os.path.join(RAW_DATA, "roles.csv")
 KEPT_TYPES = {"ACTED_IN", "DIRECTED", "PRODUCED", "WROTE",
               "COMPOSED", "EDITED", "CINEMATOGRAPHER"}
 MAX_EDGES = 30_000_000          # sample to cap memory
+TRAIN_EDGES = 2_000_000         # subset of edges used for supervision
 EMBED_DIM = 128
 EPOCHS = 5
-BATCH_SIZE = 2048
+BATCH_SIZE = 4096
 NEG_RATIO = 1
 NEIGHBORS = [15, 10]            # 2-layer sampling
 LR = 0.005
@@ -220,12 +221,21 @@ class SageEmbeddingComputer:
         ).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
-        # LinkNeighborLoader for unsupervised training
+        # Sample a subset of edges for supervision (full graph used for message passing)
+        n_edges = data.edge_index.size(1)
+        if n_edges > TRAIN_EDGES:
+            rng = torch.Generator().manual_seed(42)
+            perm = torch.randperm(n_edges, generator=rng)[:TRAIN_EDGES]
+            train_edge_label_index = data.edge_index[:, perm]
+            print(f"  Using {TRAIN_EDGES:,} / {n_edges:,} edges for supervision")
+        else:
+            train_edge_label_index = data.edge_index
+
         loader = LinkNeighborLoader(
             data,
             num_neighbors=NEIGHBORS,
             batch_size=BATCH_SIZE,
-            edge_label_index=data.edge_index,
+            edge_label_index=train_edge_label_index,
             neg_sampling_ratio=NEG_RATIO,
             shuffle=True,
             num_workers=0,
