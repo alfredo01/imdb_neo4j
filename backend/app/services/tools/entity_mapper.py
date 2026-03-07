@@ -27,14 +27,26 @@ def _extract_entities(question: str) -> dict:
 
 
 def _fuzzy_match(name: str, index_name: str, property_name: str) -> Optional[str]:
-    """Query a Neo4j full-text index with fuzzy matching. Returns the best match or None."""
+    """Query a Neo4j full-text index. Tries exact match first, then fuzzy."""
+    # 1) Try exact match (quoted phrase)
     results = graph.query(
         f"CALL db.index.fulltext.queryNodes('{index_name}', $query) "
         "YIELD node, score "
         f"RETURN node.{property_name} AS match, score LIMIT 1",
-        {"query": name + "~"}
+        {"query": f'"{name}"'}
     )
-    if results and results[0]["score"] > 0.5:
+    if results:
+        return results[0]["match"]
+
+    # 2) Fallback: fuzzy match per token (each word gets ~)
+    fuzzy_query = " ".join(word + "~" for word in name.split())
+    results = graph.query(
+        f"CALL db.index.fulltext.queryNodes('{index_name}', $query) "
+        "YIELD node, score "
+        f"RETURN node.{property_name} AS match, score LIMIT 1",
+        {"query": fuzzy_query}
+    )
+    if results and results[0]["score"] > 3.0:
         return results[0]["match"]
     return None
 
