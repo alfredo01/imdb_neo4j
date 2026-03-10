@@ -4,63 +4,80 @@ Compute 128-d GraphSAGE movie embeddings with PyTorch Geometric.
 Unlike FastRP (limited to 32d by JVM memory), GraphSAGE with mini-batch
 neighbor sampling fits the full 14.6M-node graph in ~4GB RAM.
 
-Usage (from backend container):
-    python -m app.services.compute_embeddings_sage
+Usage:
+  1. Train locally and save embeddings to file:
+       python compute_embeddings_sage.py train --data-dir ./neo4j/raw_data --neo4j-uri bolt://localhost:7687
+
+  2. Push saved embeddings to remote Neo4j:
+       python compute_embeddings_sage.py push --neo4j-uri bolt://SERVER:7687
+
+  Or do both in one shot (from Docker container):
+       python -m app.services.compute_embeddings_sage all
 """
 
+import argparse
 import gc
 import os
+import sys
 import time
 
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
-from neo4j import GraphDatabase
-from dotenv import load_dotenv
 from sklearn.preprocessing import StandardScaler
 from torch_geometric.data import Data
 from torch_geometric.loader import LinkNeighborLoader
 from torch_geometric.nn import SAGEConv
 
-load_dotenv()
-
 # ---------------------------------------------------------------------------
-# Paths & constants
+# Constants
 # ---------------------------------------------------------------------------
-RAW_DATA = os.getenv("RAW_DATA_DIR", "/app/raw_data")
-MOVIES_CSV = os.path.join(RAW_DATA, "movies.csv")
-PEOPLE_CSV = os.path.join(RAW_DATA, "people_names.csv")
-ROLES_CSV = os.path.join(RAW_DATA, "roles.csv")
-
 KEPT_TYPES = {"ACTED_IN", "DIRECTED", "PRODUCED", "WROTE",
               "COMPOSED", "EDITED", "CINEMATOGRAPHER"}
 MAX_EDGES = 30_000_000          # sample to cap memory
 TRAIN_EDGES = 2_000_000         # subset of edges used for supervision
 EMBED_DIM = 128
-EPOCHS = 5
+LEARNABLE_DIM = 64              # per-node learnable embedding dimension
+EPOCHS = 10
 BATCH_SIZE = 4096
 NEG_RATIO = 1
-NEIGHBORS = [15, 10]            # 2-layer sampling
+NEIGHBORS = [20, 15, 10]        # 3-layer sampling: movie→crew→movies→crew
 LR = 0.005
 WRITE_BATCH = 5000              # Neo4j write batch
 PROPERTY_NAME = "embeddingSage"
+EMBEDDINGS_FILE = "sage_embeddings.npz"
 
 
 # ---------------------------------------------------------------------------
 # Model
 # ---------------------------------------------------------------------------
 class GraphSAGEEncoder(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels):
+    def __init__(self, in_channels, hidden_channels, out_channels,
+                 num_nodes=0, learnable_dim=0):
         super().__init__()
-        self.conv1 = SAGEConv(in_channels, hidden_channels)
-        self.conv2 = SAGEConv(hidden_channels, out_channels)
+        # Learnable embedding per node — captures structural identity
+        self.node_emb = None
+        total_in = in_channels
+        if num_nodes > 0 and learnable_dim > 0:
+            self.node_emb = torch.nn.Embedding(num_nodes, learnable_dim)
+            torch.nn.init.xavier_uniform_(self.node_emb.weight)
+            total_in = in_channels + learnable_dim
 
-    def forward(self, x, edge_index):
+        self.conv1 = SAGEConv(total_in, hidden_channels)
+        self.conv2 = SAGEConv(hidden_channels, hidden_channels)
+        self.conv3 = SAGEConv(hidden_channels, out_channels)
+
+    def forward(self, x, edge_index, n_id=None):
+        if self.node_emb is not None and n_id is not None:
+            x = torch.cat([x, self.node_emb(n_id)], dim=-1)
         x = self.conv1(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, p=0.3, training=self.training)
         x = self.conv2(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.3, training=self.training)
+        x = self.conv3(x, edge_index)
         return x
 
 
@@ -68,22 +85,32 @@ class GraphSAGEEncoder(torch.nn.Module):
 # Main class
 # ---------------------------------------------------------------------------
 class SageEmbeddingComputer:
-    def __init__(self, uri=None, user=None, password=None):
-        if uri is None:
-            uri = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
-        if user is None:
-            user = os.getenv("NEO4J_USERNAME", "neo4j")
-        if password is None:
-            password = os.getenv("NEO4J_PASSWORD")
-        self.driver = GraphDatabase.driver(uri, auth=(user, password))
+    def __init__(self, neo4j_uri=None, neo4j_user=None, neo4j_password=None):
+        self.neo4j_uri = neo4j_uri
+        self.neo4j_user = neo4j_user
+        self.neo4j_password = neo4j_password
+        self._driver = None
+
+    @property
+    def driver(self):
+        if self._driver is None:
+            from neo4j import GraphDatabase
+            self._driver = GraphDatabase.driver(
+                self.neo4j_uri, auth=(self.neo4j_user, self.neo4j_password)
+            )
+        return self._driver
 
     def close(self):
-        self.driver.close()
+        if self._driver is not None:
+            self._driver.close()
 
     # ---- step 1: load nodes ------------------------------------------------
-    def _load_nodes(self):
+    def _load_nodes(self, data_dir):
+        movies_csv = os.path.join(data_dir, "movies.csv")
+        people_csv = os.path.join(data_dir, "people_names.csv")
+
         print("Loading movie nodes …")
-        movies = pd.read_csv(MOVIES_CSV, sep="\t", usecols=["movieId:ID", "year"],
+        movies = pd.read_csv(movies_csv, sep="\t", usecols=["movieId:ID", "year"],
                              dtype={"movieId:ID": str, "year": str})
         movies.rename(columns={"movieId:ID": "id"}, inplace=True)
         movies["year"] = pd.to_numeric(movies["year"], errors="coerce").fillna(0).astype(np.float32)
@@ -91,7 +118,7 @@ class SageEmbeddingComputer:
         print(f"  {n_movies:,} movies loaded")
 
         print("Loading person nodes …")
-        people = pd.read_csv(PEOPLE_CSV, sep="\t",
+        people = pd.read_csv(people_csv, sep="\t",
                              usecols=["personId:ID", "birthYear", "deathYear"],
                              dtype={"personId:ID": str, "birthYear": str, "deathYear": str})
         people.rename(columns={"personId:ID": "id"}, inplace=True)
@@ -130,18 +157,18 @@ class SageEmbeddingComputer:
                                 index=movie_ids)
         df = pd.DataFrame(records, columns=["id", "pr", "dc", "bc", "ec"])
         df.set_index("id", inplace=True)
-        # reindex to match movie_ids order, fill missing with 0
         df = df.reindex(movie_ids, fill_value=0.0)
         print(f"  Centrality fetched for {(df['pr'] != 0).sum():,} / {len(df):,} movies")
         return df
 
     # ---- step 3: load edges ------------------------------------------------
-    def _load_edges(self, id_map: pd.Series):
+    def _load_edges(self, data_dir, id_map: pd.Series):
+        roles_csv = os.path.join(data_dir, "roles.csv")
         print(f"Loading edges from roles.csv (keeping {len(KEPT_TYPES)} types, max {MAX_EDGES:,}) …")
         src_list, dst_list = [], []
         total_kept = 0
         chunk_iter = pd.read_csv(
-            ROLES_CSV, sep="\t",
+            roles_csv, sep="\t",
             usecols=[":START_ID", ":END_ID", ":TYPE"],
             dtype=str,
             chunksize=5_000_000,
@@ -149,7 +176,6 @@ class SageEmbeddingComputer:
         for i, chunk in enumerate(chunk_iter):
             mask = chunk[":TYPE"].isin(KEPT_TYPES)
             filtered = chunk.loc[mask, [":START_ID", ":END_ID"]]
-            # map to int indices – drop edges whose nodes are unknown
             s = id_map.reindex(filtered[":START_ID"].values).values
             d = id_map.reindex(filtered[":END_ID"].values).values
             valid = ~(np.isnan(s) | np.isnan(d))
@@ -158,7 +184,7 @@ class SageEmbeddingComputer:
             total_kept += valid.sum()
             print(f"  chunk {i}: kept {valid.sum():,} edges  (total so far {total_kept:,})")
             if total_kept >= MAX_EDGES * 1.1:
-                break  # read slightly more, sample later
+                break
 
         src = np.concatenate(src_list)
         dst = np.concatenate(dst_list)
@@ -172,7 +198,6 @@ class SageEmbeddingComputer:
             src, dst = src[idx], dst[idx]
 
         print(f"  Final edge count (one-directional): {len(src):,}")
-        # make bidirectional
         edge_index = torch.tensor(
             np.stack([np.concatenate([src, dst]),
                       np.concatenate([dst, src])]),
@@ -184,9 +209,8 @@ class SageEmbeddingComputer:
         return edge_index
 
     # ---- step 4: build features -------------------------------------------
-    def _build_features(self, movies, people, centrality, n_movies, n_total):
+    def _build_features(self, movies, people, centrality, n_movies):
         print("Building feature matrix …")
-        # movies: [year, pr, dc, bc, ec]  →  5 features
         movie_feat = np.zeros((n_movies, 5), dtype=np.float32)
         movie_feat[:, 0] = movies["year"].values
         movie_feat[:, 1] = centrality["pr"].values.astype(np.float32)
@@ -194,7 +218,6 @@ class SageEmbeddingComputer:
         movie_feat[:, 3] = centrality["bc"].values.astype(np.float32)
         movie_feat[:, 4] = centrality["ec"].values.astype(np.float32)
 
-        # persons: [birthYear, deathYear, 0, 0, 0]  →  padded to 5
         n_people = len(people)
         person_feat = np.zeros((n_people, 5), dtype=np.float32)
         person_feat[:, 0] = people["birthYear"].values
@@ -218,6 +241,8 @@ class SageEmbeddingComputer:
             in_channels=data.x.size(1),
             hidden_channels=256,
             out_channels=EMBED_DIM,
+            num_nodes=data.x.size(0),
+            learnable_dim=LEARNABLE_DIM,
         ).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
@@ -249,9 +274,7 @@ class SageEmbeddingComputer:
             for batch in loader:
                 batch = batch.to(device)
                 optimizer.zero_grad()
-                h = model(batch.x, batch.edge_index)
-                # edge_label_index has shape [2, E_pos+E_neg]
-                # edge_label: 1 for positive, 0 for negative
+                h = model(batch.x, batch.edge_index, n_id=batch.n_id)
                 src_emb = h[batch.edge_label_index[0]]
                 dst_emb = h[batch.edge_label_index[1]]
                 pred = (src_emb * dst_emb).sum(dim=-1)
@@ -262,7 +285,7 @@ class SageEmbeddingComputer:
                 optimizer.step()
                 total_loss += loss.item()
                 n_batches += 1
-                if n_batches % 500 == 0:
+                if n_batches % 100 == 0:
                     print(f"    epoch {epoch}  batch {n_batches}  "
                           f"loss={loss.item():.4f}")
             dt = time.time() - t0
@@ -271,53 +294,88 @@ class SageEmbeddingComputer:
 
         return model
 
-    # ---- step 6: infer + write to Neo4j ------------------------------------
-    def _infer_and_write(self, model, data: Data, id_map: pd.Series, n_movies: int):
-        print(f"\nInferring embeddings for {n_movies:,} movies and writing to Neo4j …")
+    # ---- step 6: infer embeddings ------------------------------------------
+    def _infer(self, model, data: Data, id_map: pd.Series, n_movies: int):
+        """Infer embeddings for all movies, return (movie_ids, embeddings) arrays."""
+        print(f"\nInferring embeddings for {n_movies:,} movies …")
         model.eval()
 
-        # Reverse map: int index → movieId string (only movie indices)
-        inv_map = pd.Series(id_map.index[:n_movies], index=np.arange(n_movies))
-
-        # We infer in batches to avoid building the full 11M × 128 matrix
         from torch_geometric.loader import NeighborLoader
+
+        inv_map = pd.Series(id_map.index[:n_movies], index=np.arange(n_movies))
 
         infer_loader = NeighborLoader(
             data,
             num_neighbors=NEIGHBORS,
             batch_size=WRITE_BATCH,
-            input_nodes=torch.arange(n_movies),  # only movie nodes
+            input_nodes=torch.arange(n_movies),
             shuffle=False,
             num_workers=0,
         )
 
+        all_movie_ids = []
+        all_embeddings = []
+        processed = 0
+
+        for batch in infer_loader:
+            with torch.no_grad():
+                h = model(batch.x, batch.edge_index, n_id=batch.n_id)
+            n_seed = batch.batch_size if isinstance(batch.batch_size, int) else batch.batch_size.item()
+            global_ids = batch.n_id[:n_seed].numpy()
+            embeddings = h[:n_seed].numpy()
+
+            for g_id, emb in zip(global_ids, embeddings):
+                if g_id >= n_movies:
+                    continue
+                all_movie_ids.append(inv_map[g_id])
+                all_embeddings.append(emb)
+
+            processed += n_seed
+            if processed % 100_000 == 0:
+                print(f"    inferred {processed:,} / {n_movies:,}")
+
+        print(f"  Total inferred: {len(all_movie_ids):,}")
+        embeddings = np.array(all_embeddings, dtype=np.float32)
+        # L2-normalize so cosine similarity spreads out (avoids all-0.99 scores)
+        norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+        norms = np.maximum(norms, 1e-8)
+        embeddings = embeddings / norms
+        return np.array(all_movie_ids, dtype=object), embeddings
+
+    # ---- save / load embeddings file ---------------------------------------
+    @staticmethod
+    def save_embeddings(movie_ids, embeddings, output_file):
+        print(f"\nSaving embeddings to {output_file} …")
+        np.savez_compressed(output_file, movie_ids=movie_ids, embeddings=embeddings)
+        size_mb = os.path.getsize(output_file) / (1024 * 1024)
+        print(f"  Saved {len(movie_ids):,} embeddings ({size_mb:.1f} MB)")
+
+    @staticmethod
+    def load_embeddings(input_file):
+        print(f"\nLoading embeddings from {input_file} …")
+        data = np.load(input_file, allow_pickle=True)
+        movie_ids = data["movie_ids"]
+        embeddings = data["embeddings"]
+        print(f"  Loaded {len(movie_ids):,} embeddings, dim={embeddings.shape[1]}")
+        return movie_ids, embeddings
+
+    # ---- push embeddings to Neo4j ------------------------------------------
+    def push_to_neo4j(self, movie_ids, embeddings):
+        print(f"\nPushing {len(movie_ids):,} embeddings to Neo4j …")
         written = 0
         with self.driver.session() as session:
             batch_params = []
-            for batch in infer_loader:
-                with torch.no_grad():
-                    h = model(batch.x, batch.edge_index)
-                # batch.n_id maps local indices back to global indices
-                # batch.input_id or batch.batch_size tells us which are seed nodes
-                n_seed = batch.batch_size if isinstance(batch.batch_size, int) else batch.batch_size.item()
-                global_ids = batch.n_id[:n_seed].numpy()
-                embeddings = h[:n_seed].numpy()
-
-                for g_id, emb in zip(global_ids, embeddings):
-                    if g_id >= n_movies:
-                        continue
-                    movie_id = inv_map[g_id]
-                    batch_params.append({
-                        "movieId": movie_id,
-                        "emb": emb.tolist(),
-                    })
-
+            for mid, emb in zip(movie_ids, embeddings):
+                batch_params.append({
+                    "movieId": str(mid),
+                    "emb": emb.tolist(),
+                })
                 if len(batch_params) >= WRITE_BATCH:
                     self._write_batch(session, batch_params)
                     written += len(batch_params)
                     batch_params = []
                     if written % 50_000 == 0:
-                        print(f"    written {written:,} / {n_movies:,}")
+                        print(f"    written {written:,} / {len(movie_ids):,}")
 
             if batch_params:
                 self._write_batch(session, batch_params)
@@ -336,7 +394,7 @@ class SageEmbeddingComputer:
             rows=params,
         )
 
-    # ---- step 7: verify ----------------------------------------------------
+    # ---- verify ------------------------------------------------------------
     def show_statistics(self):
         with self.driver.session() as session:
             print("\n" + "=" * 60)
@@ -375,17 +433,13 @@ class SageEmbeddingComputer:
             for i, r in enumerate(result, 1):
                 print(f"  {i}. {r['title']} ({r['year']}): {r['sim']:.4f}")
 
-    # ---- orchestrator ------------------------------------------------------
-    def compute(self):
-        movies, people, id_map, n_movies = self._load_nodes()
+    # ---- orchestrator: train -----------------------------------------------
+    def train_and_save(self, data_dir, output_file=EMBEDDINGS_FILE):
+        movies, people, id_map, n_movies = self._load_nodes(data_dir)
         centrality = self._fetch_centrality(movies["id"])
+        edge_index = self._load_edges(data_dir, id_map)
+        x = self._build_features(movies, people, centrality, n_movies)
 
-        edge_index = self._load_edges(id_map)
-
-        n_total = len(id_map)
-        x = self._build_features(movies, people, centrality, n_movies, n_total)
-
-        # free heavy dataframes
         del movies, people, centrality
         gc.collect()
 
@@ -394,21 +448,66 @@ class SageEmbeddingComputer:
         gc.collect()
 
         model = self._train(data)
-        self._infer_and_write(model, data, id_map, n_movies)
+        movie_ids, embeddings = self._infer(model, data, id_map, n_movies)
+        self.save_embeddings(movie_ids, embeddings, output_file)
+
+    # ---- orchestrator: full pipeline ---------------------------------------
+    def compute_all(self, data_dir, output_file=EMBEDDINGS_FILE):
+        self.train_and_save(data_dir, output_file)
+        movie_ids, embeddings = self.load_embeddings(output_file)
+        self.push_to_neo4j(movie_ids, embeddings)
+        self.show_statistics()
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+def parse_args():
+    parser = argparse.ArgumentParser(description="GraphSAGE movie embeddings")
+    parser.add_argument("command", choices=["train", "push", "all"],
+                        help="train = train locally & save file | "
+                             "push = load file & write to Neo4j | "
+                             "all = train + push")
+    parser.add_argument("--data-dir", default=os.getenv("RAW_DATA_DIR", "/app/raw_data"),
+                        help="Directory with movies.csv, people_names.csv, roles.csv")
+    parser.add_argument("--neo4j-uri", default=os.getenv("NEO4J_URI", "bolt://neo4j:7687"))
+    parser.add_argument("--neo4j-user", default=os.getenv("NEO4J_USERNAME", "neo4j"))
+    parser.add_argument("--neo4j-password", default=os.getenv("NEO4J_PASSWORD", "adminadmin"))
+    parser.add_argument("--embeddings-file", default=EMBEDDINGS_FILE,
+                        help="Path to .npz embeddings file")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
-    computer = SageEmbeddingComputer()
+    args = parse_args()
+    computer = SageEmbeddingComputer(
+        neo4j_uri=args.neo4j_uri,
+        neo4j_user=args.neo4j_user,
+        neo4j_password=args.neo4j_password,
+    )
     try:
-        print("Starting GraphSAGE embedding computation …\n")
-        computer.compute()
-        computer.show_statistics()
+        if args.command == "train":
+            print("=== TRAIN MODE: training locally, saving to file ===\n")
+            computer.train_and_save(args.data_dir, args.embeddings_file)
+
+        elif args.command == "push":
+            print("=== PUSH MODE: loading file, writing to Neo4j ===\n")
+            movie_ids, embeddings = computer.load_embeddings(args.embeddings_file)
+            computer.push_to_neo4j(movie_ids, embeddings)
+            computer.show_statistics()
+
+        elif args.command == "all":
+            print("=== ALL MODE: train + push ===\n")
+            computer.compute_all(args.data_dir, args.embeddings_file)
+
         print("\n" + "=" * 60)
-        print("GraphSAGE embeddings computed and stored successfully!")
+        print("Done!")
         print("=" * 60)
+
     except Exception as e:
         print(f"\nError: {e}")
         import traceback
         traceback.print_exc()
+        sys.exit(1)
     finally:
         computer.close()
