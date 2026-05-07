@@ -59,7 +59,40 @@ Out of scope:
 ## Context — why the current embeddings recommend "too far"
 
 The user's headline pain: recommended movies feel unrelated to the
-seed. Working hypotheses, to be confirmed/refuted by the plan:
+seed.
+
+### Confirmed by the 2026-05-07 baseline (see `validation.md`)
+
+The labeled `evaluation.csv` settles the diagnosis: **the dominant
+failure mode is the long tail of movies with no co-crew bridge to
+the anchor in the embedding's nearest-neighbor region.** Concretely:
+
+- 218 / 250 (87%) of top-10 slots have `shared_crew_count == 0`,
+  and **none** of them are relevant.
+- 32 / 250 slots have `shared_crew_count > 0`; **29 of those (91%)**
+  are relevant.
+- Every one of the 25 anchors has median `shared_crew_count == 0`
+  in its top-10.
+
+Translation: when the model finds a real crew bridge it ranks
+beautifully; cosine on the 128-d output simply doesn't preserve crew
+topology in retrieval space. So **hypotheses 5 (unnormalized
+dot-product / magnitude leak) and 7 (long tail / cold-start) are the
+load-bearing causes**. Hypotheses 1, 2, 3, 4, 6 are not contradicted
+but are second-order until 5 and 7 are addressed.
+
+This re-prioritizes `plan.md`:
+
+- **Group 5.2 (normalize + InfoNCE / margin loss)** is now top
+  priority — it directly attacks the retrieval-geometry failure.
+- **Group 5.4 (cold-start id-embedding for crewless movies)** is
+  second — it gives the long tail something to learn from.
+- **Group 4 (supervision changes)** stays valuable but moves below
+  5.2/5.4.
+- **Group 5.1 (SAGEConv swap)** and **5.3 (3-hop neighbors)** are
+  parked as possible follow-ups; the data does not yet justify them.
+
+### Working hypotheses (full list, kept for reference)
 
 1. **GCN, not GraphSAGE.** The class is named `MovieGCNEncoder` and
    uses `GCNConv`. Despite the file name, this is GCN, which
