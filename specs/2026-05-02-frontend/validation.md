@@ -14,7 +14,18 @@ Run against a backend that already passes its own validation checks.
 - `Person` and `Movie` nodes are visibly different colors; legend is
   visible.
 - Hovering an edge shows the relationship type.
-- Click pins a node; double-click releases it.
+- Clicking a node selects it (drag temporarily pins non-movie nodes).
+
+## Double-click drilldown
+- Double-clicking a director node submits a new query for that director's
+  movies (`display the graph of <name> movies`), showing the loading state
+  and then re-rendering the graph — same behavior as typing it in the box.
+- Double-clicking an actor node does the same for that actor's movies.
+- The generated query lands in the chat input box and in history, identical
+  to a manually typed query.
+- Double-click never triggers a zoom; the graph stays put apart from the
+  new query's re-render.
+- Double-clicking a movie node does nothing (no query, no error).
 
 ## Timeline
 - The x-axis spans the year range of returned movies.

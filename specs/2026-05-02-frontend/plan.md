@@ -11,7 +11,20 @@
      ids overlap between successive responses.
 2.2  Color nodes by label (`Person` vs `Movie`); legend in a corner.
 2.3  Edge label on hover showing the relationship type.
-2.4  Click a node to pin it; double-click to release.
+2.4  Click a node to select/pin it (drag already pins temporarily).
+2.5  Double-click a `Person` node to drill down: generate the query
+     `display the graph of <name> movies` and submit it through the same
+     path `App.handleSubmit` uses, so it reuses loading/error/history.
+     - Derive the person's role from the existing `directorIds` set
+       (built from incoming `DIRECTED` links) — do not add a node
+       property. Directors phrase the query as a director's movies,
+       actors as an actor's movies; both center on that person's films.
+     - Wire it via a `.on("dblclick", ...)` on the node `<g>` in
+       `D3ForceGraph.jsx`, calling a new `onNodeActivate(query)` prop that
+       `App` passes down; `App` sets `query` and runs the submit logic.
+     - Double-clicking a `Movie` node is a no-op for this increment.
+     - Guard the D3 zoom `filter` still excludes `dblclick` (it already
+       does) so drilldown never fights zoom.
 
 ## 3. Polish the timeline
 3.1  Time axis driven by `Movie.year` for cinema; bubble radius from

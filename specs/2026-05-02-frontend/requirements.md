@@ -38,6 +38,17 @@ Out of scope:
   Neither component fetches on its own.
 - **Node coloring by label.** `Person` and `Movie` use distinct colors;
   no per-property gradients yet.
+- **Double-click a node drills down via a generated query.** Double-clicking
+  a `Person` node auto-generates and submits a new `/chat` query for that
+  person's movie graph — `display the graph of <name> movies`. The person's
+  role phrases the query: a director yields "director" framing, an actor
+  "actor" framing, but both resolve to that person's movies. Role is derived
+  the same way the renderer colors nodes — membership in the `directorIds`
+  set built from incoming `DIRECTED` links, not a node property. The
+  generated query flows through the normal `App` submit path (loading state,
+  history, error handling) exactly as a typed query would; the double-click
+  is only a shortcut for typing it. Double-clicking a `Movie` node is a no-op
+  for now (movie-centered drilldown is a later increment).
 - **Bubble size encodes centrality.** The timeline's bubble radius is
   proportional to `pageRank` (or whichever centrality the Neo4j feature
   settles on).
