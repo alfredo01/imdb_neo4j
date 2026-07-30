@@ -11,17 +11,18 @@ export default function App() {
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!query.trim()) return;
+  async function runQuery(queryText) {
+    const trimmed = queryText.trim();
+    if (!trimmed || loading) return;
 
+    setQuery(trimmed);
     setLoading(true);
     setError(null);
 
     try {
       const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
       const response = await axios.post(`${apiUrl}/chat`, {
-        message: query,
+        message: trimmed,
         history: messages
       });
 
@@ -29,7 +30,7 @@ export default function App() {
       console.log("API Response:", result);
 
       // Update messages
-      setMessages([...messages, { user: query, bot: JSON.stringify(result) }]);
+      setMessages([...messages, { user: trimmed, bot: JSON.stringify(result) }]);
 
       // Store extracted entities
       if (result.entities) {
@@ -53,8 +54,19 @@ export default function App() {
     }
   }
 
+  function handleSubmit(e) {
+    e.preventDefault();
+    runQuery(query);
+  }
+
   function handleSelect(item) {
     console.log("selected node:", item);
+  }
+
+  // Double-click a Person node: drill down into that person's movies.
+  function handleNodeActivate(node) {
+    if (!node || node.type !== "Person") return;
+    runQuery(`display the graph of ${node.label} movies`);
   }
 
   return (
@@ -119,7 +131,7 @@ export default function App() {
       {/* Graph Visualization */}
       <div style={{ flex: 1, overflow: "hidden" }}>
         {data ? (
-          <D3ForceGraph data={data} entities={entities} onSelect={handleSelect} />
+          <D3ForceGraph data={data} entities={entities} onSelect={handleSelect} onNodeActivate={handleNodeActivate} />
         ) : (
           <div style={{
             display: "flex",

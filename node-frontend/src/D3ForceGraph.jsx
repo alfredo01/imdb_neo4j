@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
-function D3ForceGraph({ data, entities, onSelect = () => {} }) {
+function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = () => {} }) {
   const svgRef = useRef();
   const containerRef = useRef();
   const simulationRef = useRef();
@@ -116,7 +116,13 @@ function D3ForceGraph({ data, entities, onSelect = () => {} }) {
         .on("start", dragstarted)
         .on("drag", dragged)
         .on("end", dragended))
-      .on("click", (event, d) => onSelect(d));
+      .on("click", (event, d) => onSelect(d))
+      .on("dblclick", (event, d) => {
+        // Prevent the SVG zoom's default dblclick-to-zoom, then drill down.
+        event.preventDefault();
+        event.stopPropagation();
+        onNodeActivate(d);
+      });
 
     // Scale Person node radius by betweennessCentrality, fixed size for Movies
     const personNodes = data.nodes.filter(d => d.type === "Person");
@@ -190,7 +196,7 @@ function D3ForceGraph({ data, entities, onSelect = () => {} }) {
     return () => {
       simulation.stop();
     };
-  }, [data, onSelect, dimensions, linkDistance, chargeStrength, collideRadius, positionStrength]);
+  }, [data, onSelect, onNodeActivate, dimensions, linkDistance, chargeStrength, collideRadius, positionStrength]);
 
   return (
     <div style={{
