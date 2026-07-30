@@ -32,6 +32,19 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
   useEffect(() => {
     if (!data || !data.nodes || !data.links || dimensions.width === 0) return;
 
+    // Sanitize the payload before handing it to d3: drop null/idless nodes and
+    // any link whose endpoints aren't present. Otherwise forceLink's id accessor
+    // throws on a bad node, the effect crashes, and React unmounts the page.
+    const nodes = data.nodes.filter(n => n && n.id != null);
+    const nodeIds = new Set(nodes.map(n => n.id));
+    const linkEndId = e => (e && typeof e === "object" ? e.id : e);
+    const links = data.links.filter(l => {
+      if (!l) return false;
+      return nodeIds.has(linkEndId(l.source)) && nodeIds.has(linkEndId(l.target));
+    });
+
+    if (nodes.length === 0) return;
+
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
@@ -40,7 +53,7 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
     const margin = { left: 50, right: 50, top: 40, bottom: 80 };
 
     // Extract years from movies
-    const years = data.nodes
+    const years = nodes
       .filter(d => d.type === "Movie")
       .map(d => +d.year)
       .filter(d => !isNaN(d));
@@ -51,7 +64,7 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
       .range([margin.left, width - margin.right]);
 
     // Set initial positions
-    data.nodes.forEach(d => {
+    nodes.forEach(d => {
       if (d.type === "Movie") {
         d.fx = xScale(+d.year); // Fixed x position for movies
         d.y = height / 2;
@@ -64,14 +77,14 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
 
     // Identify directors from DIRECTED links (before D3 mutates link objects)
     const directorIds = new Set(
-      data.links
+      links
         .filter(l => l.label === "DIRECTED")
-        .map(l => typeof l.source === "object" ? l.source.id : l.source)
+        .map(l => linkEndId(l.source))
     );
 
     // Create force simulation with state-driven parameters
-    const simulation = d3.forceSimulation(data.nodes)
-      .force("link", d3.forceLink(data.links).id(d => d.id).distance(linkDistance))
+    const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id(d => d.id).distance(linkDistance))
       .force("charge", d3.forceManyBody().strength(chargeStrength))
       .force("x", d3.forceX(d => d.type === "Movie" ? xScale(+d.year) : width / 2).strength(positionStrength))
       .force("y", d3.forceY(height / 2).strength(positionStrength * 0.33))
@@ -100,7 +113,7 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
     const link = container.append("g")
       .attr("class", "links")
       .selectAll("line")
-      .data(data.links)
+      .data(links)
       .enter().append("line")
       .attr("stroke", "#999")
       .attr("stroke-opacity", 0.6)
@@ -110,7 +123,7 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
     const node = container.append("g")
       .attr("class", "nodes")
       .selectAll("g")
-      .data(data.nodes)
+      .data(nodes)
       .enter().append("g")
       .call(d3.drag()
         .on("start", dragstarted)
@@ -125,7 +138,7 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
       });
 
     // Scale Person node radius by betweennessCentrality, fixed size for Movies
-    const personNodes = data.nodes.filter(d => d.type === "Person");
+    const personNodes = nodes.filter(d => d.type === "Person");
     const maxBetweenness = d3.max(personNodes, d => d.betweennessCentrality || 0) || 1;
     function getRadius(d) {
       if (d.type === "Movie") return 25;
