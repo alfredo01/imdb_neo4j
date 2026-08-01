@@ -63,10 +63,37 @@ export default function App() {
     console.log("selected node:", item);
   }
 
-  // Double-click a Person node: drill down into that person's movies.
-  function handleNodeActivate(node) {
-    if (!node || node.type !== "Person") return;
-    runQuery(`display the graph of ${node.label} movies`);
+  // Double-click a Person node: drill down into that person's neighbourhood —
+  // their movies plus the main actors and the directors of those movies.
+  // This bypasses the LLM: the expansion is always the same shape, so it hits
+  // a fixed backend query instead of paying for a Cypher generation round-trip.
+  async function handleNodeActivate(node) {
+    if (!node || node.type !== "Person" || loading) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
+      const response = await axios.get(
+        `${apiUrl}/expand/person/${encodeURIComponent(node.id)}`,
+        { params: { movie_limit: 10, actor_limit: 5 } }
+      );
+
+      const result = response.data;
+      console.log("Expanded", node.label, "->", result.nodes.length, "nodes");
+
+      if (result.entities) setEntities(result.entities);
+      if (result.nodes && result.links) {
+        setData(result);
+        setQuery(`movies, co-actors and directors around ${node.label}`);
+      }
+    } catch (err) {
+      console.error("Failed to expand node:", err);
+      setError(`Failed to expand ${node.label}: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

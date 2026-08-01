@@ -19,6 +19,7 @@ print("Current Working Directory:", os.getcwd())  # Check where FastAPI is execu
 #from app.services.tools.cypher import cypher_qa_tool as generate_response
 from app.services.tools.cypher_to_d3 import cypher_qa_tool as generate_response
 from app.services.tools.neo4j_to_json import to_d3_format
+from app.services.tools.expand import expand_person
 from app.services.graph import enhanced_graph as graph
 
 
@@ -60,6 +61,11 @@ api = FastAPI(openapi_tags=[
     {
         'name': 'Chat Query',
         'description': 'Query the Neo4j graph database using Cypher statements'
+
+    },
+    {
+        'name': 'Explore',
+        'description': 'Drill down into the neighbourhood of a graph node'
 
     },
 ])
@@ -111,3 +117,20 @@ async def chat(
 @api.get("/graph/json")
 def get_graph_json():
     return to_d3_format(latest_intermediate_steps)
+
+
+@api.get("/expand/person/{person}", tags=['Explore'])
+def expand_person_endpoint(
+    person: str,
+    movie_limit: int = 10,
+    actor_limit: int = 5,
+):
+    """Drill down on a Person: their movies, plus each movie's main actors
+    and directors. `person` is a personId (e.g. nm0000033) or an exact name.
+    """
+    movie_limit = max(1, min(movie_limit, 30))
+    actor_limit = max(1, min(actor_limit, 15))
+    d3_data = expand_person(person, movie_limit=movie_limit, actor_limit=actor_limit)
+    if not d3_data["nodes"]:
+        raise HTTPException(status_code=404, detail=f"No person found for '{person}'")
+    return d3_data

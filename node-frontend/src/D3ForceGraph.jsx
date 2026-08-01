@@ -8,6 +8,13 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [showControls, setShowControls] = useState(false);
 
+  // App re-creates these handlers on every render; keeping them in refs stops
+  // the draw effect from tearing down and restarting the simulation each time.
+  const onSelectRef = useRef(onSelect);
+  const onNodeActivateRef = useRef(onNodeActivate);
+  onSelectRef.current = onSelect;
+  onNodeActivateRef.current = onNodeActivate;
+
   // Force parameters state
   const [linkDistance, setLinkDistance] = useState(100);
   const [chargeStrength, setChargeStrength] = useState(-200);
@@ -58,15 +65,19 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
       .map(d => +d.year)
       .filter(d => !isNaN(d));
 
-    // Create timeline scale
+    // Create timeline scale (fall back to a dummy span if no movie has a year)
     const xScale = d3.scaleLinear()
-      .domain([d3.min(years) - 1, d3.max(years) + 1])
+      .domain(years.length ? [d3.min(years) - 1, d3.max(years) + 1] : [0, 1])
       .range([margin.left, width - margin.right]);
 
     // Set initial positions
     nodes.forEach(d => {
-      if (d.type === "Movie") {
+      if (d.type === "Movie" && isFinite(+d.year)) {
         d.fx = xScale(+d.year); // Fixed x position for movies
+        d.y = height / 2;
+      } else if (d.type === "Movie") {
+        // No usable year: let the simulation place it instead of pinning it to NaN.
+        d.x = width / 2;
         d.y = height / 2;
       } else {
         // People start distributed around center
@@ -86,7 +97,7 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
     const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links).id(d => d.id).distance(linkDistance))
       .force("charge", d3.forceManyBody().strength(chargeStrength))
-      .force("x", d3.forceX(d => d.type === "Movie" ? xScale(+d.year) : width / 2).strength(positionStrength))
+      .force("x", d3.forceX(d => (d.type === "Movie" && isFinite(+d.year)) ? xScale(+d.year) : width / 2).strength(positionStrength))
       .force("y", d3.forceY(height / 2).strength(positionStrength * 0.33))
       .force("collide", d3.forceCollide().radius(collideRadius));
 
@@ -129,12 +140,12 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
         .on("start", dragstarted)
         .on("drag", dragged)
         .on("end", dragended))
-      .on("click", (event, d) => onSelect(d))
+      .on("click", (event, d) => onSelectRef.current(d))
       .on("dblclick", (event, d) => {
         // Prevent the SVG zoom's default dblclick-to-zoom, then drill down.
         event.preventDefault();
         event.stopPropagation();
-        onNodeActivate(d);
+        onNodeActivateRef.current(d);
       });
 
     // Scale Person node radius by betweennessCentrality, fixed size for Movies
@@ -143,8 +154,10 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
     function getRadius(d) {
       if (d.type === "Movie") return 25;
       const val = d.betweennessCentrality;
-      if (!val || !isFinite(val) || val <= 0) return 5;
-      return 5 + 45 * Math.sqrt(val / maxBetweenness);
+      if (!val || !isFinite(val) || val <= 0) return d.isCenter ? 20 : 5;
+      const r = 5 + 45 * Math.sqrt(val / maxBetweenness);
+      // The focused person must stay findable even with a low centrality.
+      return d.isCenter ? Math.max(r, 20) : r;
     }
 
     node.append("circle")
@@ -154,15 +167,15 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
         if (directorIds.has(d.id)) return "#FF8C00";
         return "#D4A843";
       })
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 2)
+      .attr("stroke", d => d.isCenter ? "#E74C3C" : "#fff")
+      .attr("stroke-width", d => d.isCenter ? 5 : 2)
       .style("cursor", "pointer");
 
     node.append("text")
       .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
-      .style("font-size", d => d.type === "Movie" ? "16px" : "12px")
-      .style("font-weight", d => d.type === "Movie" ? "bold" : "normal")
+      .style("font-size", d => (d.type === "Movie" || d.isCenter) ? "16px" : "12px")
+      .style("font-weight", d => (d.type === "Movie" || d.isCenter) ? "bold" : "normal")
       .style("pointer-events", "none")
       .text(d => d.label);
 
@@ -209,7 +222,7 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
     return () => {
       simulation.stop();
     };
-  }, [data, onSelect, onNodeActivate, dimensions, linkDistance, chargeStrength, collideRadius, positionStrength]);
+  }, [data, dimensions, linkDistance, chargeStrength, collideRadius, positionStrength]);
 
   return (
     <div style={{
@@ -250,6 +263,19 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
             <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#D4A843" }}></div>
             <span>Actors</span>
           </div>
+          {data && data.nodes && data.nodes.some(n => n && n.isCenter) && (
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <div style={{
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                background: "#D4A843",
+                border: "3px solid #E74C3C",
+                boxSizing: "border-box"
+              }}></div>
+              <span>Focus</span>
+            </div>
+          )}
           <button
             onClick={() => setShowControls(!showControls)}
             style={{
