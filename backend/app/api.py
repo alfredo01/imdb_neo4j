@@ -19,7 +19,7 @@ print("Current Working Directory:", os.getcwd())  # Check where FastAPI is execu
 #from app.services.tools.cypher import cypher_qa_tool as generate_response
 from app.services.tools.cypher_to_d3 import cypher_qa_tool as generate_response
 from app.services.tools.neo4j_to_json import to_d3_format
-from app.services.tools.expand import expand_person
+from app.services.tools.expand import expand_person, expand_movie
 from app.services.graph import enhanced_graph as graph
 
 
@@ -133,4 +133,19 @@ def expand_person_endpoint(
     d3_data = expand_person(person, movie_limit=movie_limit, actor_limit=actor_limit)
     if not d3_data["nodes"]:
         raise HTTPException(status_code=404, detail=f"No person found for '{person}'")
+    return d3_data
+
+
+@api.get("/expand/movie/{movie}", tags=['Explore'])
+def expand_movie_endpoint(
+    movie: str,
+    person_limit: int = 200,
+):
+    """Drill down on a Movie: every person involved in it (actors, directors,
+    ...). `movie` is a movieId (e.g. tt0075148) or an exact title.
+    """
+    person_limit = max(1, min(person_limit, 200))
+    d3_data = expand_movie(movie, person_limit=person_limit)
+    if not d3_data["nodes"]:
+        raise HTTPException(status_code=404, detail=f"No movie found for '{movie}'")
     return d3_data
