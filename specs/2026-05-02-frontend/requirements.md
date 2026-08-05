@@ -43,9 +43,10 @@ Out of scope:
   LLM.** Superseded the original design, which generated a natural-language
   query and pushed it back through `/chat`. An expansion always means the
   same thing, so it hits fixed backend Cypher instead: `Person` →
-  `GET /expand/person/{id}` (their movies plus those movies' main actors
-  and directors), `Movie` → `GET /expand/movie/{id}` (everyone involved in
-  it, `person_limit=200`). This removes a Cypher-generation round-trip and
+  `GET /expand/person/{id}` (their whole filmography, then as much crew as
+  fits, `node_limit=200`), `Movie` → `GET /expand/movie/{id}` (everyone
+  involved in it, `person_limit=200`). Both views are therefore bounded at
+  200 nodes, which is the practical ceiling for a readable force layout. This removes a Cypher-generation round-trip and
   makes the result reproducible — the same node always expands to the same
   graph. `D3ForceGraph` stays presentation-only: it reports the whole node
   via `onNodeActivate(node)` and `App` decides which endpoint to call.

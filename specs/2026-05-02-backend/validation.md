@@ -16,6 +16,18 @@ Neo4j (the Neo4j feature's bring-up checks pass first).
 - `GET /expand/person/nm0000033` (Hitchcock) returns his movies plus
   their actors and directors; the person node carries `isCenter: true`
   and matches the `center` field.
+- The movie count in that response equals the count from
+  `MATCH (p)-[:ACTED_IN|DIRECTED]->(m) RETURN count(DISTINCT m)` run
+  directly — no film is dropped while the total stays under the budget.
+- Every movie in the response has at least one crew member attached
+  whenever the budget allowed any at all: the round-robin must not spend
+  the whole allowance on the first few films.
+- A person with more films than `node_limit` returns exactly
+  `node_limit` nodes, essentially all movies and no crew — the intended
+  priority order, not a bug.
+- No response ever exceeds `node_limit` nodes, and no link points at a
+  node absent from `nodes` (the fill loop drops nodes, never leaves
+  dangling edges).
 - The same call by exact name (`/expand/person/Alfred%20Hitchcock`)
   returns the same graph.
 - `GET /expand/movie/{id}` returns the movie plus its people, with link

@@ -8,9 +8,10 @@ movies; for a Movie, everyone involved in it.
 
 from app.services.graph import enhanced_graph as graph
 
-# Person -> movies (ordered by importance), then for each movie the top actors
-# and every director. Both sub-queries aggregate inside the CALL so a movie with
-# no actors (or no known director) still yields a row instead of being dropped.
+# Step 1 of the person expansion: the person and their complete filmography,
+# most central first. Movies own the node budget, so this is capped only by the
+# budget itself, not by a small fixed limit. The CALL aggregates, so a person
+# with no films still comes back as a row.
 EXPAND_PERSON_CYPHER = """
 MATCH (p:Person)
 WHERE p.personId = $person OR p.name = $person
@@ -19,10 +20,25 @@ CALL {
     WITH p
     MATCH (p)-[r:ACTED_IN|DIRECTED]->(m:Movie)
     WITH m, collect(DISTINCT type(r)) AS roles
-    RETURN m, roles
     ORDER BY coalesce(m.pageRankCentrality, 0) DESC,
              coalesce(m.degreeCentrality, 0) DESC
     LIMIT $movieLimit
+    RETURN collect({movie: m, roles: roles}) AS movies
+}
+RETURN p AS person, movies
+"""
+
+# Step 2: the crew of those movies. Every director (there are few, and a
+# co-director is more informative than one more actor) plus the top actors of
+# each. `actorLimit` is the per-movie allowance the caller computed from what is
+# left of the node budget; the caller then decides who actually fits.
+EXPAND_PERSON_CREW_CYPHER = """
+MATCH (m:Movie)
+WHERE m.movieId IN $movieIds
+CALL {
+    WITH m
+    MATCH (d:Person)-[:DIRECTED]->(m)
+    RETURN collect(DISTINCT d) AS directors
 }
 CALL {
     WITH m
@@ -33,13 +49,7 @@ CALL {
     LIMIT $actorLimit
     RETURN collect(a) AS actors
 }
-CALL {
-    WITH m
-    MATCH (d:Person)-[:DIRECTED]->(m)
-    RETURN collect(DISTINCT d) AS directors
-}
-RETURN p AS person, m AS movie, roles, actors, directors
-ORDER BY coalesce(m.pageRankCentrality, 0) DESC
+RETURN m.movieId AS movieId, directors, actors
 """
 
 
@@ -91,16 +101,24 @@ def _movie_node(props, is_center=False):
     return node
 
 
-def expand_person(person: str, movie_limit: int = 10, actor_limit: int = 5) -> dict:
+def expand_person(person: str, node_limit: int = 200) -> dict:
     """Return a D3 payload centred on `person` (personId or exact name).
 
-    Nodes: the person, up to `movie_limit` of their movies, the top
-    `actor_limit` actors of each movie and all of their directors.
+    The whole filmography comes first: every movie the person acted in or
+    directed is a node, so nothing important is cut by a small fixed limit.
+    Whatever is left of `node_limit` then goes to the people around those
+    movies — directors first, then actors spread evenly across the films, so a
+    prolific career doesn't hand the entire budget to its first few titles.
+    Co-actors that don't fit are a double-click away on the movie itself.
     """
+    movie_cap = max(1, node_limit - 1)  # the centre node always costs one
     records = graph.query(
         EXPAND_PERSON_CYPHER,
-        {"person": person, "movieLimit": movie_limit, "actorLimit": actor_limit},
+        {"person": person, "movieLimit": movie_cap},
     )
+    if not records:
+        return {"nodes": [], "links": [], "center": None,
+                "entities": {"persons": [], "movies": []}}
 
     nodes = {}
     links = {}
@@ -121,27 +139,69 @@ def expand_person(person: str, movie_limit: int = 10, actor_limit: int = 5) -> d
             "label": label,
         }
 
-    center_id = None
-    center_label = None
+    def add_related(props, movie_id, label):
+        """Attach a crew member to a movie, respecting the node budget.
 
-    for record in records:
-        person_props = record["person"]
-        movie_props = record["movie"]
-        center_id = person_props["personId"]
-        center_label = person_props.get("name")
+        Someone already on the graph is free to link — only a new node spends
+        budget. Returns False once the graph is full.
+        """
+        person_id = props["personId"]
+        if person_id not in nodes:
+            if len(nodes) >= node_limit:
+                return False
+            add_node(_person_node(props))
+        add_link(person_id, movie_id, label)
+        return True
 
-        add_node(_person_node(person_props, is_center=True))
+    record = records[0]
+    person_props = record["person"]
+    center_id = person_props["personId"]
+    center_label = person_props.get("name")
+
+    add_node(_person_node(person_props, is_center=True))
+
+    movie_ids = []
+    for entry in record["movies"]:
+        movie_props = entry["movie"]
+        movie_id = movie_props["movieId"]
         add_node(_movie_node(movie_props))
-        for role in record["roles"]:
-            add_link(center_id, movie_props["movieId"], role)
+        movie_ids.append(movie_id)
+        for role in entry["roles"]:
+            add_link(center_id, movie_id, role)
 
-        for actor_props in record["actors"]:
-            add_node(_person_node(actor_props))
-            add_link(actor_props["personId"], movie_props["movieId"], "ACTED_IN")
+    remaining = node_limit - len(nodes)
+    if movie_ids and remaining > 0:
+        # Ask for a little more than the even share: crew members recur across a
+        # filmography, and a duplicate costs no budget, so the surplus is what
+        # keeps the graph filling up to the limit rather than stalling short.
+        per_movie = max(1, remaining // len(movie_ids) + 2)
+        crew_records = graph.query(
+            EXPAND_PERSON_CREW_CYPHER,
+            {"movieIds": movie_ids, "actorLimit": per_movie},
+        )
+        crew = {r["movieId"]: r for r in crew_records}
 
-        for director_props in record["directors"]:
-            add_node(_person_node(director_props))
-            add_link(director_props["personId"], movie_props["movieId"], "DIRECTED")
+        # Directors of every movie first.
+        for movie_id in movie_ids:
+            for director_props in crew.get(movie_id, {}).get("directors", []):
+                if director_props["personId"] == center_id:
+                    continue
+                add_related(director_props, movie_id, "DIRECTED")
+
+        # Then actors round-robin: one per movie per pass, so the budget is
+        # shared across the filmography instead of being drained by movie #1.
+        depth = max((len(r["actors"]) for r in crew_records), default=0)
+        for rank in range(depth):
+            if len(nodes) >= node_limit:
+                break
+            for movie_id in movie_ids:
+                actors = crew.get(movie_id, {}).get("actors", [])
+                if rank >= len(actors):
+                    continue
+                actor_props = actors[rank]
+                if actor_props["personId"] == center_id:
+                    continue
+                add_related(actor_props, movie_id, "ACTED_IN")
 
     return {
         "nodes": list(nodes.values()),

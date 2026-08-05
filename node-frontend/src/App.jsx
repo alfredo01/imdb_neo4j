@@ -137,7 +137,7 @@ export default function App() {
     const isPerson = node.type === "Person";
     const path = isPerson ? "person" : "movie";
     const params = isPerson
-      ? { movie_limit: 10, actor_limit: 5 }
+      ? { node_limit: 200 }
       : { person_limit: 200 };
 
     setLoading(true);

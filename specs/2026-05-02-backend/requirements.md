@@ -46,8 +46,7 @@ Out of scope:
 - **Drill-down bypasses the LLM.** A double-click always means the same
   thing, so `/expand/*` runs fixed Cypher in `tools/expand.py` instead of
   paying for a Cypher generation round-trip. The two shapes are:
-  - person → their movies (most central first), plus each movie's top
-    actors and all its directors;
+  - person → their complete filmography, then the crew of those films;
   - movie → every `(:Person)-[r]->(:Movie)` neighbour, relationship type
     left untyped so `ACTED_IN`, `DIRECTED` and anything added later all
     come through, with `type(r)` becoming the link label.
@@ -55,7 +54,20 @@ Out of scope:
   return the same `{nodes, links, entities}` shape as `/chat`, plus a
   `center` field and `isCenter` on the focused node so the UI can
   highlight it. Result size is capped by clamped query params
-  (`movie_limit`/`actor_limit`, `person_limit`), not by the LLM.
+  (`node_limit`, `person_limit`), not by the LLM.
+- **A person's films outrank the people around them.** Superseded the
+  first cut, which took the top 10 movies and 5 actors each: that dropped
+  films a user expects to see — the whole point of asking about a
+  director. The expansion now spends the budget in priority order —
+  every movie the person acted in or directed, then all directors of
+  those movies (few, and a co-director says more than one more actor),
+  then actors round-robin across the filmography so a long career doesn't
+  hand the entire allowance to its first few titles. Consequences worth
+  knowing: an actor with more films than the budget gets a pure
+  filmography and no crew at all, and the cast a movie doesn't have room
+  for is one double-click away on the movie itself. Node identity is
+  deduplicated, so a recurring collaborator is charged once and the
+  surplus goes to someone new.
 - **Expansions degrade to a lone node, never to nothing.** The
   sub-queries aggregate inside `CALL { ... }` so a movie with no cast (or
   a person with no films) still returns its own node instead of an empty

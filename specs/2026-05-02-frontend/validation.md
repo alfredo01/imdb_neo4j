@@ -20,6 +20,9 @@ Run against a backend that already passes its own validation checks.
 - Double-clicking a person node calls `/expand/person/{id}` (verify in the
   Network tab — no `/chat` request is made) and re-renders with that
   person's movies, their actors and directors; the focused node is ringed.
+- For a director with a known filmography, count the purple movie nodes:
+  every film should be there. This is the case the old top-10 limit got
+  wrong, so it's the one worth checking by hand.
 - Double-clicking a movie node calls `/expand/movie/{id}` and re-renders
   with everyone involved in it; directors keep their distinct color, which
   confirms the link labels survived the round-trip.

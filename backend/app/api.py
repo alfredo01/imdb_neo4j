@@ -122,15 +122,14 @@ def get_graph_json():
 @api.get("/expand/person/{person}", tags=['Explore'])
 def expand_person_endpoint(
     person: str,
-    movie_limit: int = 10,
-    actor_limit: int = 5,
+    node_limit: int = 200,
 ):
-    """Drill down on a Person: their movies, plus each movie's main actors
-    and directors. `person` is a personId (e.g. nm0000033) or an exact name.
+    """Drill down on a Person: their full filmography first, then as many of
+    those movies' directors and actors as `node_limit` still allows.
+    `person` is a personId (e.g. nm0000033) or an exact name.
     """
-    movie_limit = max(1, min(movie_limit, 30))
-    actor_limit = max(1, min(actor_limit, 15))
-    d3_data = expand_person(person, movie_limit=movie_limit, actor_limit=actor_limit)
+    node_limit = max(10, min(node_limit, 500))
+    d3_data = expand_person(person, node_limit=node_limit)
     if not d3_data["nodes"]:
         raise HTTPException(status_code=404, detail=f"No person found for '{person}'")
     return d3_data
