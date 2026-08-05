@@ -20,6 +20,11 @@ frontend and explore without help.
        queries and asserts shape of the response.
 - 1.6  Tighten dev posture: remove the wildcard CORS in non-dev, move the
        Neo4j password out of `docker-compose.yaml`.
+- 1.7  Exploration without typing (done): double-click drill-down on both
+       `Person` and `Movie` nodes via the deterministic `/expand/*`
+       endpoints, plus Back/Forward over the resulting trail. This is the
+       click-through interaction Phase 3 will reuse for recommendations
+       (3.4), so the history stacks are worth keeping generic.
 
 ## Phase 2 — Music via WIKIDATA / SPARQL
 Prove the visualization idiom works on a second domain without re-ingesting

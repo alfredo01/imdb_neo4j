@@ -16,7 +16,8 @@ In scope:
 - React 18 app, CRA toolchain (`react-scripts`).
 - D3 v7 for both visualizations.
 - Components:
-  - `App.jsx` — page shell, chat input, history, layout.
+  - `App.jsx` — page shell, chat input, exploration history
+    (Back/Forward), drill-down dispatch, layout.
   - `D3ForceGraph.jsx` — force-directed graph view.
   - `D3TimeLine.jsx` — timeline bubble chart view.
 - HTTP layer: `axios`, base URL from `REACT_APP_API_URL` (build-time
@@ -38,17 +39,27 @@ Out of scope:
   Neither component fetches on its own.
 - **Node coloring by label.** `Person` and `Movie` use distinct colors;
   no per-property gradients yet.
-- **Double-click a node drills down via a generated query.** Double-clicking
-  a `Person` node auto-generates and submits a new `/chat` query for that
-  person's movie graph — `display the graph of <name> movies`. The person's
-  role phrases the query: a director yields "director" framing, an actor
-  "actor" framing, but both resolve to that person's movies. Role is derived
-  the same way the renderer colors nodes — membership in the `directorIds`
-  set built from incoming `DIRECTED` links, not a node property. The
-  generated query flows through the normal `App` submit path (loading state,
-  history, error handling) exactly as a typed query would; the double-click
-  is only a shortcut for typing it. Double-clicking a `Movie` node is a no-op
-  for now (movie-centered drilldown is a later increment).
+- **Double-click a node drills down via a dedicated endpoint, not the
+  LLM.** Superseded the original design, which generated a natural-language
+  query and pushed it back through `/chat`. An expansion always means the
+  same thing, so it hits fixed backend Cypher instead: `Person` →
+  `GET /expand/person/{id}` (their movies plus those movies' main actors
+  and directors), `Movie` → `GET /expand/movie/{id}` (everyone involved in
+  it, `person_limit=200`). This removes a Cypher-generation round-trip and
+  makes the result reproducible — the same node always expands to the same
+  graph. `D3ForceGraph` stays presentation-only: it reports the whole node
+  via `onNodeActivate(node)` and `App` decides which endpoint to call.
+- **Back/Forward navigate the exploration trail.** Drill-downs chain, so
+  the view keeps a `history` stack and a `future` stack of `{data,
+  entities, query}` snapshots, with browser semantics: a new query or
+  drill-down clears `future`. Every graph replacement goes through one
+  `showGraph()` function so no path can bypass the history. The snapshot's
+  query text is tracked in a ref rather than read from the `query` state —
+  the input is controlled, so that state already holds whatever the user
+  has typed next, not the text that produced the visible graph.
+  Deliberately *not* rewound: the `messages` chat history sent to the LLM.
+  Back is view navigation; silently rolling back conversational context
+  would change what a follow-up question means.
 - **Bubble size encodes centrality.** The timeline's bubble radius is
   proportional to `pageRank` (or whichever centrality the Neo4j feature
   settles on).

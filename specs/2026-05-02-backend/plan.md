@@ -31,12 +31,24 @@
 4.2  Assert the response is shape-valid (Pydantic) and non-empty for
      the first four.
 
-## 5. Model-job hygiene
-5.1  Add a `--dry-run` flag to `compute_centrality.py` that prints
-     summary stats without writing to Neo4j.
-5.2  Make the script idempotent (safe to re-run; recomputes in place).
-5.3  Same treatment for `compute_embeddings.py` and `_sage.py`.
+## 5. Drill-down endpoints (shipped)
+5.1  `tools/expand.py` holds one fixed Cypher statement per shape —
+     `EXPAND_PERSON_CYPHER`, `EXPAND_MOVIE_CYPHER` — and the node
+     builders that turn rows into the `{nodes, links}` contract.
+5.2  `GET /expand/person/{person}` (`movie_limit` ≤ 30, `actor_limit`
+     ≤ 15) and `GET /expand/movie/{movie}` (`person_limit` ≤ 200,
+     default 200) clamp their params in `api.py` and `404` on an
+     unresolvable id/name.
+5.3  Remaining: fold these into the Pydantic response models from §1.2,
+     and cover them in the §4 smoke tests (both shapes, plus a movie
+     with no cast and an unknown id).
 
-## 6. Dev posture
-6.1  Replace wildcard CORS with an env-driven allowlist.
-6.2  Move all Neo4j credentials to env vars; remove hard-coded values.
+## 6. Model-job hygiene
+6.1  Add a `--dry-run` flag to `compute_centrality.py` that prints
+     summary stats without writing to Neo4j.
+6.2  Make the script idempotent (safe to re-run; recomputes in place).
+6.3  Same treatment for `compute_embeddings.py` and `_sage.py`.
+
+## 7. Dev posture
+7.1  Replace wildcard CORS with an env-driven allowlist.
+7.2  Move all Neo4j credentials to env vars; remove hard-coded values.

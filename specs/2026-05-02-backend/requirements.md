@@ -15,11 +15,14 @@ In scope:
 - HTTP surface in `backend/app/api.py`:
   - `GET /` (health),
   - `POST /chat` (the main entry point),
-  - `GET /graph/json` (last subgraph).
+  - `GET /graph/json` (last subgraph),
+  - `GET /expand/person/{person}` and `GET /expand/movie/{movie}`
+    (deterministic drill-down, no LLM).
 - Pipeline modules under `backend/app/services/`:
   - `tools/cypher_to_d3.py` — LLM-driven Cypher generation with
     centrality-aware prompt.
   - `tools/neo4j_to_json.py` — Cypher rows → `{nodes, links}`.
+  - `tools/expand.py` — fixed Cypher for the drill-down endpoints.
   - `graph.py` — Neo4j driver wrapper.
   - `llm.py` — LLM client / prompt plumbing.
 - Offline model jobs:
@@ -40,6 +43,23 @@ Out of scope:
 ## Decisions
 - **Single response shape.** Every query path returns a D3-shaped
   payload `{nodes, links, entities}`. No alternative formats exposed.
+- **Drill-down bypasses the LLM.** A double-click always means the same
+  thing, so `/expand/*` runs fixed Cypher in `tools/expand.py` instead of
+  paying for a Cypher generation round-trip. The two shapes are:
+  - person → their movies (most central first), plus each movie's top
+    actors and all its directors;
+  - movie → every `(:Person)-[r]->(:Movie)` neighbour, relationship type
+    left untyped so `ACTED_IN`, `DIRECTED` and anything added later all
+    come through, with `type(r)` becoming the link label.
+  Both accept an id (`personId` / `movieId`) or an exact name/title, and
+  return the same `{nodes, links, entities}` shape as `/chat`, plus a
+  `center` field and `isCenter` on the focused node so the UI can
+  highlight it. Result size is capped by clamped query params
+  (`movie_limit`/`actor_limit`, `person_limit`), not by the LLM.
+- **Expansions degrade to a lone node, never to nothing.** The
+  sub-queries aggregate inside `CALL { ... }` so a movie with no cast (or
+  a person with no films) still returns its own node instead of an empty
+  result. A genuinely unknown id/name is a `404`.
 - **Centrality lives in the prompt.** Result-size control is done by
   the LLM via `ORDER BY ... LIMIT N` clauses, not by post-filtering in
   Python. (See `CENTRALITY_USAGE.md`.)

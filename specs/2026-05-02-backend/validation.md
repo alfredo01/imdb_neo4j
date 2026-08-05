@@ -12,6 +12,21 @@ Neo4j (the Neo4j feature's bring-up checks pass first).
 - `GET /graph/json` after a successful `/chat` returns the same payload
   the chat call returned (modulo the LLM debug field).
 
+## Drill-down endpoints
+- `GET /expand/person/nm0000033` (Hitchcock) returns his movies plus
+  their actors and directors; the person node carries `isCenter: true`
+  and matches the `center` field.
+- The same call by exact name (`/expand/person/Alfred%20Hitchcock`)
+  returns the same graph.
+- `GET /expand/movie/{id}` returns the movie plus its people, with link
+  labels reflecting the real relationship types (`ACTED_IN`,
+  `DIRECTED`, ...) rather than a hard-coded pair.
+- Limits are honored and clamped: `?person_limit=500` yields at most
+  200 person nodes; `?movie_limit=0` does not error.
+- A movie with no cast returns exactly one node and zero links — not a
+  `404` and not an empty payload.
+- An unknown id returns `404`, not a `200` with an empty graph.
+
 ## Pipeline behavior
 - The Cypher generated for "all actors in 1990s action movies" includes
   an `ORDER BY ... LIMIT` clause — verified by enabling the debug field.

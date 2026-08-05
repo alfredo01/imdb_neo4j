@@ -17,15 +17,32 @@ Run against a backend that already passes its own validation checks.
 - Clicking a node selects it (drag temporarily pins non-movie nodes).
 
 ## Double-click drilldown
-- Double-clicking a director node submits a new query for that director's
-  movies (`display the graph of <name> movies`), showing the loading state
-  and then re-rendering the graph — same behavior as typing it in the box.
-- Double-clicking an actor node does the same for that actor's movies.
-- The generated query lands in the chat input box and in history, identical
-  to a manually typed query.
+- Double-clicking a person node calls `/expand/person/{id}` (verify in the
+  Network tab — no `/chat` request is made) and re-renders with that
+  person's movies, their actors and directors; the focused node is ringed.
+- Double-clicking a movie node calls `/expand/movie/{id}` and re-renders
+  with everyone involved in it; directors keep their distinct color, which
+  confirms the link labels survived the round-trip.
+- A descriptive label lands in the input box ("movies, co-actors and
+  directors around X" / "everyone involved in Y").
+- Drill-downs chain: expanding a node from an expanded graph works
+  repeatedly without stale nodes leaking between views.
 - Double-click never triggers a zoom; the graph stays put apart from the
-  new query's re-render.
-- Double-clicking a movie node does nothing (no query, no error).
+  re-render.
+- Expanding a node whose id the backend can't resolve shows the inline
+  error and leaves the current graph visible.
+
+## Back / Forward
+- After search → person drill-down → movie drill-down, **Back** returns to
+  each previous graph in order, restoring the query text with it; the depth
+  counter decrements.
+- **Forward** replays those steps in order and is greyed out at the tip.
+- Both are disabled on the very first graph (nothing to go back to) and
+  while a request is in flight.
+- Running a new search from a rewound position clears Forward.
+- History entries are independent: going back and re-expanding the same
+  node produces the same graph, with no leftover state from the branch
+  that was discarded.
 
 ## Timeline
 - The x-axis spans the year range of returned movies.
