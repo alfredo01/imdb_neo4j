@@ -1,7 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import D3ForceGraph from "./D3ForceGraph";
 import axios from "axios";
+
+// Back/Forward share one look; only the disabled state differs.
+function navButtonStyle(disabled) {
+  return {
+    padding: "10px 18px",
+    fontSize: "14px",
+    background: "#7f8c8d",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: "bold",
+    whiteSpace: "nowrap",
+    opacity: disabled ? 0.5 : 1
+  };
+}
 
 export default function App() {
   const [data, setData] = useState(null);
@@ -10,6 +26,56 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
+  // Stack of previously displayed graphs, so Back can step out of a drill-down
+  // chain one level at a time. Each entry is a full snapshot of what the view
+  // was showing; the current graph is never in here.
+  const [history, setHistory] = useState([]);
+  // Views stepped back out of, waiting to be replayed by Forward. Browser
+  // semantics: a fresh query or drill-down discards them.
+  const [future, setFuture] = useState([]);
+  // What is on screen right now. `query` state can't stand in for this: the
+  // input is controlled, so it already holds whatever the user has typed next,
+  // not the text that produced the visible graph.
+  const displayedRef = useRef(null);
+
+  // Apply a stored snapshot to the view.
+  function restore(view) {
+    displayedRef.current = view;
+    setData(view.data);
+    setEntities(view.entities);
+    setQuery(view.query);
+    setError(null);
+  }
+
+  // Single entry point for replacing the graph: archives the outgoing view
+  // first, so nothing is pushed on the very first query.
+  // The outgoing view is read into a local before any setState: the updaters run
+  // later, by which point displayedRef.current already points at the new view.
+  function showGraph(nextData, nextEntities, nextQuery) {
+    const outgoing = displayedRef.current;
+    if (outgoing) setHistory(prev => [...prev, outgoing]);
+    setFuture([]);
+    displayedRef.current = { data: nextData, entities: nextEntities, query: nextQuery };
+    setData(nextData);
+    setEntities(nextEntities);
+    setQuery(nextQuery);
+  }
+
+  function handleBack() {
+    if (!history.length || loading) return;
+    const outgoing = displayedRef.current;
+    if (outgoing) setFuture(prev => [...prev, outgoing]);
+    setHistory(history.slice(0, -1));
+    restore(history[history.length - 1]);
+  }
+
+  function handleForward() {
+    if (!future.length || loading) return;
+    const outgoing = displayedRef.current;
+    if (outgoing) setHistory(prev => [...prev, outgoing]);
+    setFuture(future.slice(0, -1));
+    restore(future[future.length - 1]);
+  }
 
   async function runQuery(queryText) {
     const trimmed = queryText.trim();
@@ -32,17 +98,13 @@ export default function App() {
       // Update messages
       setMessages([...messages, { user: trimmed, bot: JSON.stringify(result) }]);
 
-      // Store extracted entities
-      if (result.entities) {
-        setEntities(result.entities);
-      }
-
       // Update graph data if nodes and links exist
       if (result.nodes && result.links) {
         console.log("Updating graph with:", result.nodes.length, "nodes and", result.links.length, "links");
-        setData(result);
+        showGraph(result, result.entities || entities, trimmed);
       } else {
         console.warn("Response missing nodes or links:", result);
+        if (result.entities) setEntities(result.entities);
       }
 
       // Keep query in the text box for editing
@@ -91,14 +153,16 @@ export default function App() {
       const result = response.data;
       console.log("Expanded", node.label, "->", result.nodes.length, "nodes");
 
-      if (result.entities) setEntities(result.entities);
       if (result.nodes && result.links) {
-        setData(result);
-        setQuery(
+        showGraph(
+          result,
+          result.entities || entities,
           isPerson
             ? `movies, co-actors and directors around ${node.label}`
             : `everyone involved in ${node.label}`
         );
+      } else if (result.entities) {
+        setEntities(result.entities);
       }
     } catch (err) {
       console.error("Failed to expand node:", err);
@@ -120,6 +184,24 @@ export default function App() {
         alignItems: "center"
       }}>
         <form onSubmit={handleSubmit} style={{ display: "flex", gap: "10px", width: "100%" }}>
+          <button
+            type="button"
+            onClick={handleBack}
+            disabled={loading || history.length === 0}
+            title={history.length ? "Back to the previous graph" : "No previous graph"}
+            style={navButtonStyle(loading || history.length === 0)}
+          >
+            ← Back{history.length > 1 ? ` (${history.length})` : ""}
+          </button>
+          <button
+            type="button"
+            onClick={handleForward}
+            disabled={loading || future.length === 0}
+            title={future.length ? "Forward to the graph you came back from" : "No graph ahead"}
+            style={navButtonStyle(loading || future.length === 0)}
+          >
+            Forward →{future.length > 1 ? ` (${future.length})` : ""}
+          </button>
           <input
             type="text"
             value={query}
