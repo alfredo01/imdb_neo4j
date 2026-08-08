@@ -23,17 +23,33 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
 
   useEffect(() => {
     const updateDimensions = () => {
-      if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight
-        });
-      }
+      if (!containerRef.current) return;
+      const width = containerRef.current.offsetWidth;
+      const height = containerRef.current.offsetHeight;
+      // Only replace the object when the numbers really changed: the draw
+      // effect keys on `dimensions` identity, so a no-op update would restart
+      // the whole simulation.
+      setDimensions(prev =>
+        prev.width === width && prev.height === height ? prev : { width, height }
+      );
     };
 
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+
+    // The window doesn't resize when the info panel opens or closes, but the
+    // container does — watch the element itself so the graph reflows into the
+    // space it actually has.
+    let observer;
+    if (typeof ResizeObserver !== "undefined" && containerRef.current) {
+      observer = new ResizeObserver(updateDimensions);
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      if (observer) observer.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -51,6 +67,9 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
     });
 
     if (nodes.length === 0) return;
+
+    // Pending single-click select; see the click/dblclick handlers below.
+    let clickTimer = null;
 
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
@@ -140,11 +159,18 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
         .on("start", dragstarted)
         .on("drag", dragged)
         .on("end", dragended))
-      .on("click", (event, d) => onSelectRef.current(d))
+      .on("click", (event, d) => {
+        // A double-click also emits two clicks, and select now triggers a
+        // Wikipedia fetch — so hold the select briefly and drop it if the
+        // second click arrives.
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => onSelectRef.current(d), 250);
+      })
       .on("dblclick", (event, d) => {
         // Prevent the SVG zoom's default dblclick-to-zoom, then drill down.
         event.preventDefault();
         event.stopPropagation();
+        clearTimeout(clickTimer);
         onNodeActivateRef.current(d);
       });
 
@@ -220,6 +246,7 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
     }
 
     return () => {
+      clearTimeout(clickTimer);
       simulation.stop();
     };
   }, [data, dimensions, linkDistance, chargeStrength, collideRadius, positionStrength]);

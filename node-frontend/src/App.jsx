@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import D3ForceGraph from "./D3ForceGraph";
+import NodeInfoPanel from "./NodeInfoPanel";
 import axios from "axios";
 
 // Back/Forward share one look; only the disabled state differs.
@@ -26,6 +27,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [selectedNode, setSelectedNode] = useState(null);
   // Stack of previously displayed graphs, so Back can step out of a drill-down
   // chain one level at a time. Each entry is a full snapshot of what the view
   // was showing; the current graph is never in here.
@@ -121,8 +123,11 @@ export default function App() {
     runQuery(query);
   }
 
+  // Single click opens the info panel (photo + Wikipedia lead); double-click
+  // still drills down. Clicking the same node again closes the panel.
   function handleSelect(item) {
-    console.log("selected node:", item);
+    if (!item || !item.id) return;
+    setSelectedNode(prev => (prev && prev.id === item.id ? null : item));
   }
 
   // Double-click a node: drill down into its neighbourhood. A Person expands to
@@ -249,8 +254,11 @@ export default function App() {
         </div>
       )}
 
-      {/* Graph Visualization */}
-      <div style={{ flex: 1, overflow: "hidden" }}>
+      {/* Graph Visualization + info panel side by side. The panel is a sibling
+          rather than an overlay so it never hides the legend or the force
+          controls; D3ForceGraph re-measures itself when the space changes. */}
+      <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+        <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
         {data ? (
           <D3ForceGraph data={data} entities={entities} onSelect={handleSelect} onNodeActivate={handleNodeActivate} />
         ) : (
@@ -263,6 +271,10 @@ export default function App() {
           }}>
             <p>Click Search to explore the graph</p>
           </div>
+        )}
+        </div>
+        {selectedNode && (
+          <NodeInfoPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
         )}
       </div>
     </div>
