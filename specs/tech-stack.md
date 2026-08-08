@@ -30,8 +30,18 @@ Anything not in either column is out of scope until added here.
 ### Frontend — React + D3
 - `node-frontend/` (CRA, React 18, D3 v7, axios).
 - Components: `D3ForceGraph.jsx` (force-directed graph),
-  `D3TimeLine.jsx` (timeline bubble chart), composed in `App.jsx`.
+  `D3TimeLine.jsx` (timeline bubble chart), `NodeInfoPanel.jsx` (selected
+  node's photo + Wikipedia lead), composed in `App.jsx`.
 - Served via nginx in production (`nginx.conf`, port 80 → 3000).
+
+### Wikipedia (read-only, browser-side)
+- `en.wikipedia.org/api/rest_v1/page/summary/{title}` for the lead
+  paragraph and thumbnail; `w/api.php?action=query&list=search` to
+  resolve a label to an article title when the direct hit misses.
+- No key, no quota agreement, CORS-open — called straight from the
+  browser, never proxied through FastAPI.
+- Strictly decorative: every failure mode degrades to a message in the
+  panel, never to a broken graph.
 
 ### LLM / agent layer
 - `services/llm.py` + `services/tools/cypher_to_d3.py` drive

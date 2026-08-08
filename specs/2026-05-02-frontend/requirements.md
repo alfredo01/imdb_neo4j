@@ -17,11 +17,14 @@ In scope:
 - D3 v7 for both visualizations.
 - Components:
   - `App.jsx` — page shell, chat input, exploration history
-    (Back/Forward), drill-down dispatch, layout.
+    (Back/Forward), drill-down dispatch, selection, layout.
   - `D3ForceGraph.jsx` — force-directed graph view.
   - `D3TimeLine.jsx` — timeline bubble chart view.
+  - `NodeInfoPanel.jsx` — side panel with the selected node's photo and
+    Wikipedia lead paragraph.
 - HTTP layer: `axios`, base URL from `REACT_APP_API_URL` (build-time
-  injected by the Docker build).
+  injected by the Docker build). The one exception is the Wikipedia
+  lookup, which the panel calls directly with `fetch`.
 - Production serving: nginx (`node-frontend/nginx.conf`), exposed on
   port 80.
 
@@ -39,6 +42,29 @@ Out of scope:
   Neither component fetches on its own.
 - **Node coloring by label.** `Person` and `Movie` use distinct colors;
   no per-property gradients yet.
+- **Single click opens an info panel; the content comes from Wikipedia.**
+  The graph answers "who is connected to whom" but says nothing about who
+  a person actually is, and the IMDB dump carries no biography or image.
+  Wikipedia's REST summary endpoint (`/api/rest_v1/page/summary/{title}`)
+  supplies both: it is CORS-open, needs no key, and returns exactly the
+  lead paragraph plus a thumbnail. Called straight from the browser — a
+  backend proxy would add a hop and a cache to maintain for data that is
+  neither private nor tied to our graph. Actors and directors are the
+  target; `Movie` nodes use the same path for free.
+- **Wikipedia titles are matched, not assumed.** A node label is not an
+  article title. People usually resolve directly (verified: Penélope Cruz,
+  Antonio Banderas, Javier Bardem, Pedro Almodóvar, Woody Allen, Jane
+  Birkin). Bare movie titles collide with ordinary words — "Nine" is a
+  number, "Sahara" a desert — so a `Movie` hit is accepted only when the
+  description or lead mentions a film; otherwise the search API resolves
+  it (`Blow` → `Blow (film)`, `Nine` → `Nine (2009 live-action film)`).
+  When nothing plausible is found the panel says so rather than
+  displaying the wrong article, which is the failure users would not
+  catch.
+- **Selection is click, exploration is double-click.** Both gestures live
+  on the same node, and a double-click necessarily emits two clicks, so
+  the select is held 250 ms and dropped if the second click arrives —
+  otherwise every drill-down would also fire a Wikipedia request.
 - **Double-click a node drills down via a dedicated endpoint, not the
   LLM.** Superseded the original design, which generated a natural-language
   query and pushed it back through `/chat`. An expansion always means the
@@ -71,10 +97,14 @@ Out of scope:
   Runtime override is not supported.
 
 ## Context
-- The backend is the only data source; if its response shape changes,
-  this feature breaks. The shape is owned by the backend feature dir.
+- The backend owns everything the graph draws; if its response shape
+  changes, this feature breaks. The shape is owned by the backend feature
+  dir. Wikipedia is the one other source, and it is strictly decorative:
+  the panel failing leaves the graph fully usable.
 - The VPS deploy serves the frontend on port 80 and the backend on
   port 8000 of the same host; that's why `REACT_APP_API_URL` is set to
-  `http://<vps-ip>:8000` at build time.
+  `http://<vps-ip>:8000` at build time. The page is plain HTTP while
+  Wikipedia is HTTPS — allowed in that direction (mixed-content rules
+  block the reverse), so no proxy is needed for the panel to work.
 - The CRA toolchain is showing its age; a Vite migration is plausible
   but explicitly **not** part of this feature.

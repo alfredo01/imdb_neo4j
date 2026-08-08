@@ -11,7 +11,15 @@
      ids overlap between successive responses.
 2.2  Color nodes by label (`Person` vs `Movie`); legend in a corner.
 2.3  Edge label on hover showing the relationship type.
-2.4  Click a node to select/pin it (drag already pins temporarily).
+2.4  Click a node to open its info panel (shipped). `D3ForceGraph` still
+     only reports the event: it calls `onSelect(node)` and `App` owns the
+     `selectedNode` state.
+     - The click is deferred 250 ms and cancelled by a `dblclick`, so
+       drill-down doesn't also trigger a lookup. The timer is cleared in
+       the effect's teardown.
+     - Clicking the selected node again closes the panel, as does its ×.
+     - Remaining: highlight the selected node in the graph itself (a ring
+       like `isCenter`, in a different color).
 2.5  Double-click a node to drill down (shipped). Superseded the original
      "generate a query and resubmit through `/chat`" approach — it calls
      the deterministic `/expand/*` endpoints instead.
@@ -55,8 +63,34 @@
      - Remaining: keyboard shortcuts (Alt+←/→) and optionally restoring
        zoom/pan alongside the graph.
 
-## 5. Build & deploy
-5.1  Confirm `docker build` picks up `REACT_APP_API_URL` correctly and
+## 5. Node info panel (shipped)
+5.1  `NodeInfoPanel.jsx` takes `{node, onClose}` and fetches on `node`
+     change: thumbnail, `description`, `extract`, and a link to the
+     article. Loading / empty / error states are all rendered — a failed
+     lookup must never blank the panel or the graph.
+5.2  Title resolution: direct summary, then the search API as fallback.
+     `Movie` nodes additionally require the article to look like a film
+     (`description`/lead mentions "film" or "movie") before the direct hit
+     is accepted, and the search hint carries the node's year. If neither
+     candidate is plausible, render "no article found" rather than the
+     wrong page.
+5.3  In-flight requests are aborted via `AbortController` on node change,
+     so clicking through the graph quickly can't let a slow early
+     response overwrite a newer node.
+5.4  Layout: the panel is a flex sibling of the graph, not an overlay —
+     as an overlay it covered the legend and the force-controls button.
+     `D3ForceGraph` therefore watches its container with a
+     `ResizeObserver` (the window doesn't resize when the panel opens).
+     `setDimensions` bails out when the numbers are unchanged; the draw
+     effect keys on object identity, so a no-op update would restart the
+     simulation.
+5.5  Remaining: cache resolved titles per session (a node re-clicked
+     after Back re-fetches today), and consider a language fallback —
+     `en.wikipedia.org` is hardcoded, which is thin for some non-English
+     film people.
+
+## 6. Build & deploy
+6.1  Confirm `docker build` picks up `REACT_APP_API_URL` correctly and
      the resulting bundle calls the VPS backend.
-5.2  Verify the nginx config serves the SPA correctly (history-mode
+6.2  Verify the nginx config serves the SPA correctly (history-mode
      fallback to `index.html`).

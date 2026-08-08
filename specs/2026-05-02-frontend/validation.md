@@ -14,7 +14,29 @@ Run against a backend that already passes its own validation checks.
 - `Person` and `Movie` nodes are visibly different colors; legend is
   visible.
 - Hovering an edge shows the relationship type.
-- Clicking a node selects it (drag temporarily pins non-movie nodes).
+- Clicking a node opens the info panel (drag temporarily pins non-movie
+  nodes).
+
+## Info panel
+- Clicking an actor or director shows their photo and Wikipedia lead
+  paragraph; the "Read on Wikipedia" link opens the right article.
+- Spot-check the names that resolve directly — Penélope Cruz, Antonio
+  Banderas, Javier Bardem, Pedro Almodóvar, Woody Allen, Jane Birkin —
+  each should show an image, not the empty state.
+- Clicking a movie whose title is an ordinary word resolves to the film,
+  not the word: "Nine" must not show the number, "Sahara" not the desert,
+  "Blow" must reach `Blow (film)`.
+- A node with no article shows "No Wikipedia article found", not a blank
+  panel and not an unrelated article.
+- Double-clicking a node drills down **without** the panel flickering
+  through a lookup for that node — the click is cancelled by the
+  double-click.
+- Clicking several nodes in quick succession leaves the panel showing the
+  **last** one clicked; no earlier response overwrites it.
+- Opening and closing the panel reflows the graph into the freed space,
+  and the legend and Force Controls button stay reachable throughout.
+- With the network blocked (DevTools offline), clicking a node shows the
+  panel's error state and the graph stays fully interactive.
 
 ## Double-click drilldown
 - Double-clicking a person node calls `/expand/person/{id}` (verify in the
