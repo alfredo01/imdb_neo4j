@@ -35,9 +35,12 @@ Anything not in either column is out of scope until added here.
 - Served via nginx in production (`nginx.conf`, port 80 → 3000).
 
 ### Wikipedia (read-only, browser-side)
-- `en.wikipedia.org/api/rest_v1/page/summary/{title}` for the lead
+- `{lang}.wikipedia.org/api/rest_v1/page/summary/{title}` for the lead
   paragraph and thumbnail; `w/api.php?action=query&list=search` to
-  resolve a label to an article title when the direct hit misses.
+  resolve a label to an article title when the direct hit misses;
+  `prop=langlinks` to follow an English title to its counterpart in the
+  reader's language.
+- `{lang}` comes from `navigator.languages`, with `en` as the fallback.
 - No key, no quota agreement, CORS-open — called straight from the
   browser, never proxied through FastAPI.
 - Strictly decorative: every failure mode degrades to a message in the

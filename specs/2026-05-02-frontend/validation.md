@@ -28,6 +28,14 @@ Run against a backend that already passes its own validation checks.
   "Blow" must reach `Blow (film)`.
 - A node with no article shows "No Wikipedia article found", not a blank
   panel and not an unrelated article.
+- Language follows the browser: with French preferred, Penélope Cruz and
+  Woody Allen read in French, and English titles resolve to the French
+  articles — "All About My Mother" → *Tout sur ma mère*, "Nine" →
+  *Nine (film, 2009)*. With Spanish preferred, "Blow" → *Blow
+  (película)*. Change the browser's language order and re-click to
+  verify; the link label shows which edition answered.
+- A subject with no article in the reader's language falls back to
+  English rather than showing the empty state.
 - Double-clicking a node drills down **without** the panel flickering
   through a lookup for that node — the click is cancelled by the
   double-click.

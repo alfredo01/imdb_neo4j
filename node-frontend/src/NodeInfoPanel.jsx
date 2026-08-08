@@ -4,11 +4,40 @@ import React, { useEffect, useState } from "react";
 // the lead paragraph plus a thumbnail, which is exactly the "essential" of an
 // article. The search endpoint is the fallback when a label isn't an article
 // title (disambiguation, or a movie whose page is "Title (film)").
-const WIKI_REST = "https://en.wikipedia.org/api/rest_v1/page/summary/";
-const WIKI_SEARCH = "https://en.wikipedia.org/w/api.php";
+const rest = lang => `https://${lang}.wikipedia.org/api/rest_v1/page/summary/`;
+const api = lang => `https://${lang}.wikipedia.org/w/api.php`;
 
-async function fetchSummary(title, signal) {
-  const res = await fetch(WIKI_REST + encodeURIComponent(title.replace(/ /g, "_")), {
+// The word that marks an article as being about a film, per language edition.
+// Used both to phrase the search and to sanity-check a bare title. English is
+// the fallback everywhere, so "film" always stays in the list.
+const FILM_WORDS = {
+  en: ["film", "movie"],
+  fr: ["film"],
+  es: ["película", "filme"],
+  de: ["film"],
+  it: ["film"],
+  pt: ["filme"],
+  nl: ["film"],
+  ca: ["pel·lícula"],
+  pl: ["film"],
+  ru: ["фильм"],
+  ja: ["映画"]
+};
+
+const filmWords = lang => FILM_WORDS[lang] || ["film"];
+
+// The reader's languages, most preferred first, reduced to the base subtag a
+// Wikipedia edition is named after ("fr-CA" -> "fr"). English is appended as
+// the universal fallback: it is the largest edition, so when the reader's own
+// language has no article it is the one most likely to.
+function preferredLanguages() {
+  const raw = (typeof navigator !== "undefined" && (navigator.languages || [navigator.language])) || [];
+  const codes = raw.filter(Boolean).map(l => l.toLowerCase().split("-")[0]);
+  return [...new Set([...codes, "en"])].slice(0, 3);
+}
+
+async function fetchSummary(lang, title, signal) {
+  const res = await fetch(rest(lang) + encodeURIComponent(title.replace(/ /g, "_")), {
     signal,
     headers: { Accept: "application/json" }
   });
@@ -17,12 +46,12 @@ async function fetchSummary(title, signal) {
 }
 
 // Ask Wikipedia's search for the best article title for this node. Movies get a
-// "film" hint (and their year when known) so "Blow" resolves to the movie, not
-// the noun.
-async function searchTitle(node, signal) {
+// "film" hint in the target language (and their year when known) so "Blow"
+// resolves to the movie, not the noun.
+async function searchTitle(lang, node, signal) {
   const hint = node.type === "Movie"
-    ? `${node.label} ${node.year || ""} film`
-    : `${node.label} actor director`;
+    ? `${node.label} ${node.year || ""} ${filmWords(lang)[0]}`
+    : node.label;
   const params = new URLSearchParams({
     action: "query",
     list: "search",
@@ -31,43 +60,88 @@ async function searchTitle(node, signal) {
     format: "json",
     origin: "*"
   });
-  const res = await fetch(`${WIKI_SEARCH}?${params}`, { signal });
+  const res = await fetch(`${api(lang)}?${params}`, { signal });
   if (!res.ok) return null;
   const body = await res.json();
   const hit = body?.query?.search?.[0];
   return hit ? hit.title : null;
 }
 
+// Follow an article to its counterpart in another language edition. This is what
+// makes localised movie titles work: our labels are IMDB's (English) titles, so
+// "All About My Mother" only becomes "Tout sur ma mère" by asking Wikipedia.
+async function translateTitle(fromLang, title, toLang, signal) {
+  const params = new URLSearchParams({
+    action: "query",
+    titles: title,
+    prop: "langlinks",
+    lllang: toLang,
+    redirects: "1",
+    format: "json",
+    origin: "*"
+  });
+  const res = await fetch(`${api(fromLang)}?${params}`, { signal });
+  if (!res.ok) return null;
+  const body = await res.json();
+  const pages = body?.query?.pages || {};
+  for (const page of Object.values(pages)) {
+    const link = page.langlinks?.[0];
+    if (link) return link["*"];
+  }
+  return null;
+}
+
 // A movie's direct hit is only trusted if the article is actually about a film.
 // Bare titles collide with ordinary words — "Nine" resolves to the number, and
 // "Sahara" to the desert — so those fall through to the search fallback.
-function plausible(node, summary) {
+function plausible(lang, node, summary) {
   if (!summary || summary.type === "disambiguation" || !summary.extract) return false;
   if (node.type !== "Movie") return true;
   const blob = `${summary.description || ""} ${summary.extract.slice(0, 200)}`.toLowerCase();
-  return blob.includes("film") || blob.includes("movie");
+  return filmWords(lang).some(word => blob.includes(word));
 }
 
-// Direct hit first, then search. A disambiguation page counts as a miss: it has
-// no useful extract, so fall through to search rather than showing "X may refer
-// to...".
-async function lookup(node, signal) {
-  const direct = await fetchSummary(node.label, signal);
-  if (plausible(node, direct)) {
-    return direct;
-  }
-  const title = await searchTitle(node, signal);
+// Direct hit first, then search, within one language edition. A disambiguation
+// page counts as a miss: it has no useful extract, so fall through to search
+// rather than showing "X may refer to...".
+async function lookupIn(lang, node, signal) {
+  const direct = await fetchSummary(lang, node.label, signal);
+  if (plausible(lang, node, direct)) return { summary: direct, lang };
+
+  const title = await searchTitle(lang, node, signal);
   if (title) {
-    const found = await fetchSummary(title, signal);
-    if (plausible(node, found)) return found;
+    const found = await fetchSummary(lang, title, signal);
+    if (plausible(lang, node, found)) return { summary: found, lang };
   }
   // Deliberately not falling back to the rejected direct hit: an honest "no
   // article found" beats confidently showing the Sahara desert under a movie.
   return null;
 }
 
+// Reader's language first, English last. When only English has the article, try
+// one more hop: English may still link to a translation whose title we could
+// never have guessed from an IMDB label.
+async function lookup(node, signal) {
+  const languages = preferredLanguages();
+
+  for (const lang of languages) {
+    const hit = await lookupIn(lang, node, signal);
+    if (!hit) continue;
+    if (lang === "en" && languages[0] !== "en") {
+      const localTitle = await translateTitle("en", hit.summary.title, languages[0], signal);
+      if (localTitle) {
+        const local = await fetchSummary(languages[0], localTitle, signal);
+        if (plausible(languages[0], node, local)) return { summary: local, lang: languages[0] };
+      }
+    }
+    return hit;
+  }
+  return null;
+}
+
 export default function NodeInfoPanel({ node, onClose }) {
   const [summary, setSummary] = useState(null);
+  const [lang, setLang] = useState(null);
   const [status, setStatus] = useState("idle");
 
   useEffect(() => {
@@ -78,12 +152,14 @@ export default function NodeInfoPanel({ node, onClose }) {
     const controller = new AbortController();
     setStatus("loading");
     setSummary(null);
+    setLang(null);
 
     lookup(node, controller.signal)
       .then(result => {
         if (controller.signal.aborted) return;
-        setSummary(result);
-        setStatus(result && result.extract ? "ready" : "empty");
+        setSummary(result ? result.summary : null);
+        setLang(result ? result.lang : null);
+        setStatus(result && result.summary.extract ? "ready" : "empty");
       })
       .catch(err => {
         if (err.name === "AbortError") return;
@@ -187,7 +263,9 @@ export default function NodeInfoPanel({ node, onClose }) {
               </div>
             )}
 
-            <p style={{ lineHeight: 1.5, margin: 0 }}>{summary.extract}</p>
+            <p lang={lang || undefined} style={{ lineHeight: 1.5, margin: 0 }}>
+              {summary.extract}
+            </p>
 
             {summary.content_urls?.desktop?.page && (
               <a
@@ -201,7 +279,7 @@ export default function NodeInfoPanel({ node, onClose }) {
                   fontSize: "13px"
                 }}
               >
-                Read on Wikipedia →
+                Read on Wikipedia{lang ? ` (${lang})` : ""} →
               </a>
             )}
           </>

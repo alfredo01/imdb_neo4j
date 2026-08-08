@@ -70,24 +70,32 @@
      lookup must never blank the panel or the graph.
 5.2  Title resolution: direct summary, then the search API as fallback.
      `Movie` nodes additionally require the article to look like a film
-     (`description`/lead mentions "film" or "movie") before the direct hit
-     is accepted, and the search hint carries the node's year. If neither
-     candidate is plausible, render "no article found" rather than the
-     wrong page.
-5.3  In-flight requests are aborted via `AbortController` on node change,
+     (`description`/lead mentions the language's word for film) before the
+     direct hit is accepted, and the search hint carries the node's year.
+     If neither candidate is plausible, render "no article found" rather
+     than the wrong page.
+5.3  Language: `preferredLanguages()` derives base subtags from
+     `navigator.languages` and always ends with `en`. Each edition gets
+     the full direct-then-search treatment before moving on. When only
+     English resolves, `translateTitle()` follows `langlinks` back to the
+     reader's language — required because our labels are IMDB's English
+     titles. `FILM_WORDS` carries the per-language film word for both the
+     search hint and the plausibility check; unlisted languages default
+     to "film". The rendered `<p>` gets a matching `lang` attribute, and
+     the article link shows which edition answered.
+5.4  In-flight requests are aborted via `AbortController` on node change,
      so clicking through the graph quickly can't let a slow early
      response overwrite a newer node.
-5.4  Layout: the panel is a flex sibling of the graph, not an overlay —
+5.5  Layout: the panel is a flex sibling of the graph, not an overlay —
      as an overlay it covered the legend and the force-controls button.
      `D3ForceGraph` therefore watches its container with a
      `ResizeObserver` (the window doesn't resize when the panel opens).
      `setDimensions` bails out when the numbers are unchanged; the draw
      effect keys on object identity, so a no-op update would restart the
      simulation.
-5.5  Remaining: cache resolved titles per session (a node re-clicked
-     after Back re-fetches today), and consider a language fallback —
-     `en.wikipedia.org` is hardcoded, which is thin for some non-English
-     film people.
+5.6  Remaining: cache resolved titles per session (a node re-clicked
+     after Back re-fetches today, now costing up to four requests), and
+     extend `FILM_WORDS` as more reader languages show up in practice.
 
 ## 6. Build & deploy
 6.1  Confirm `docker build` picks up `REACT_APP_API_URL` correctly and

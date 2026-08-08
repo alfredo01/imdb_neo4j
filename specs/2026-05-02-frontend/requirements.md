@@ -61,6 +61,24 @@ Out of scope:
   When nothing plausible is found the panel says so rather than
   displaying the wrong article, which is the failure users would not
   catch.
+- **The article follows the reader's language, English when it doesn't
+  exist.** `navigator.languages` is reduced to base subtags (`fr-CA` →
+  `fr`) and tried in order against the matching Wikipedia edition, with
+  `en` always appended last — it is the largest edition, so it is the
+  best fallback when the reader's own has no article. Two consequences
+  shape the implementation:
+  - The "is this a film?" check and the search hint are language-specific
+    (`película` in Spanish, `фильм` in Russian), so a per-language word
+    list backs both. Unknown languages fall back to "film", which many
+    editions borrow anyway.
+  - Our labels are IMDB's English titles, which are not the local article
+    titles. So when only English resolves, one `langlinks` hop asks
+    English for its translated counterpart — the only way to reach
+    `Tout sur ma mère` or `Todo sobre mi madre` from "All About My
+    Mother". Verified end to end for `fr` and `es` readers.
+  Cost is 1–2 requests for a person in their own language, up to 4 for a
+  movie that needs the English hop. Acceptable for a click-driven panel;
+  it would not be for anything on the render path.
 - **Selection is click, exploration is double-click.** Both gestures live
   on the same node, and a double-click necessarily emits two clicks, so
   the select is held 250 ms and dropped if the second click arrives —
