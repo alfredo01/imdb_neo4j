@@ -32,16 +32,24 @@
      the first four.
 
 ## 5. Drill-down endpoints (shipped)
-5.1  `tools/expand.py` holds one fixed Cypher statement per shape —
-     `EXPAND_PERSON_CYPHER`, `EXPAND_MOVIE_CYPHER` — and the node
-     builders that turn rows into the `{nodes, links}` contract.
-5.2  `GET /expand/person/{person}` (`movie_limit` ≤ 30, `actor_limit`
-     ≤ 15) and `GET /expand/movie/{movie}` (`person_limit` ≤ 200,
+5.1  `tools/expand.py` holds the fixed Cypher — `EXPAND_PERSON_CYPHER`
+     (person + filmography), `EXPAND_PERSON_CREW_CYPHER` (crew of those
+     films), `EXPAND_MOVIE_CYPHER` — plus the node builders that turn
+     rows into the `{nodes, links}` contract.
+5.2  `GET /expand/person/{person}` (`node_limit`, default 200, clamped
+     to 10–500) and `GET /expand/movie/{movie}` (`person_limit` ≤ 200,
      default 200) clamp their params in `api.py` and `404` on an
      unresolvable id/name.
-5.3  Remaining: fold these into the Pydantic response models from §1.2,
+5.3  The person budget is spent in Python, not in Cypher: the movie
+     query is capped only by the budget, then `EXPAND_PERSON_CREW_CYPHER`
+     is asked for an even per-movie share plus slack, and the fill loop
+     decides who fits — directors first, then actors round-robin. Slack
+     matters because dedup makes a recurring collaborator free; without
+     it the graph stalls well short of the limit.
+5.4  Remaining: fold these into the Pydantic response models from §1.2,
      and cover them in the §4 smoke tests (both shapes, plus a movie
-     with no cast and an unknown id).
+     with no cast, a person with more films than the budget, and an
+     unknown id).
 
 ## 6. Model-job hygiene
 6.1  Add a `--dry-run` flag to `compute_centrality.py` that prints
