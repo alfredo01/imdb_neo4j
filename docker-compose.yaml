@@ -5,9 +5,13 @@ services:
     #  dockerfile: Dockerfile
     #container_name: imdb_neo4j
     image: aelfred/imdb_neo4j:latest
+    # Bound to loopback on purpose: the API reaches Neo4j over the
+    # movies_network bridge as host `neo4j`, so nothing needs these ports from
+    # outside. Reach the browser UI through an SSH tunnel instead:
+    #   ssh -L 7474:localhost:7474 -L 7687:localhost:7687 <user>@<vps>
     ports:
-      - "7474:7474"   # HTTP
-      - "7687:7687"   # Bolt
+      - "127.0.0.1:7474:7474"   # HTTP
+      - "127.0.0.1:7687:7687"   # Bolt
     environment:
       - NEO4J_AUTH=neo4j/adminadmin
       - NEO4J_apoc_export_file_enabled=true
