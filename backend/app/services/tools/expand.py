@@ -86,12 +86,15 @@ def _person_node(props, is_center=False):
     return node
 
 
-def _movie_node(props, is_center=False):
+def _movie_node(props, is_center=False, roles=None):
     node = {
         "id": props["movieId"],
         "label": props.get("title"),
         "type": "Movie",
     }
+    if roles:
+        # e.g. ["DIRECTED"] — what the expanded person did on this film.
+        node["subjectRoles"] = roles
     if props.get("year") is not None:
         node["year"] = props["year"]
     if props.get("betweennessCentrality") is not None:
@@ -110,8 +113,14 @@ def expand_person(person: str, node_limit: int = 200) -> dict:
     movies — directors first, then actors spread evenly across the films, so a
     prolific career doesn't hand the entire budget to its first few titles.
     Co-actors that don't fit are a double-click away on the movie itself.
+
+    The subject is deliberately *not* in the graph. They would link to every
+    single movie, which is a hub that says nothing — the whole view is already
+    "their films" — while dragging the layout into a starburst and hiding the
+    connections that do carry information, the ones between films. Their name
+    still travels in `entities` and `center` so the UI can title the view.
     """
-    movie_cap = max(1, node_limit - 1)  # the centre node always costs one
+    movie_cap = max(1, node_limit)
     records = graph.query(
         EXPAND_PERSON_CYPHER,
         {"person": person, "movieLimit": movie_cap},
@@ -124,13 +133,7 @@ def expand_person(person: str, node_limit: int = 200) -> dict:
     links = {}
 
     def add_node(node):
-        # First writer wins, except that isCenter must never be lost: the
-        # focused person also shows up in the actor/director lists.
-        existing = nodes.get(node["id"])
-        if existing is None:
-            nodes[node["id"]] = node
-        elif node.get("isCenter"):
-            existing["isCenter"] = True
+        nodes.setdefault(node["id"], node)
 
     def add_link(source, target, label):
         links[(source, target, label)] = {
@@ -158,16 +161,14 @@ def expand_person(person: str, node_limit: int = 200) -> dict:
     center_id = person_props["personId"]
     center_label = person_props.get("name")
 
-    add_node(_person_node(person_props, is_center=True))
-
     movie_ids = []
     for entry in record["movies"]:
         movie_props = entry["movie"]
         movie_id = movie_props["movieId"]
-        add_node(_movie_node(movie_props))
+        # What the subject did on this film is kept on the movie itself, since
+        # the link that used to carry it is gone with them.
+        add_node(_movie_node(movie_props, roles=entry["roles"]))
         movie_ids.append(movie_id)
-        for role in entry["roles"]:
-            add_link(center_id, movie_id, role)
 
     remaining = node_limit - len(nodes)
     if movie_ids and remaining > 0:

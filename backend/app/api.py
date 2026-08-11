@@ -131,7 +131,11 @@ def expand_person_endpoint(
     node_limit = max(10, min(node_limit, 500))
     d3_data = expand_person(person, node_limit=node_limit)
     if not d3_data["nodes"]:
-        raise HTTPException(status_code=404, detail=f"No person found for '{person}'")
+        # The subject is no longer a node, so an empty graph is ambiguous:
+        # `center` tells the two cases apart.
+        detail = (f"No person found for '{person}'" if d3_data["center"] is None
+                  else f"'{person}' has no films in the graph")
+        raise HTTPException(status_code=404, detail=detail)
     return d3_data
 
 
