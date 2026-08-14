@@ -13,7 +13,12 @@ services:
       - "127.0.0.1:7474:7474"   # HTTP
       - "127.0.0.1:7687:7687"   # Bolt
     environment:
-      - NEO4J_AUTH=neo4j/adminadmin
+      # From the gitignored .env, never committed. Only consulted when Neo4j
+      # initializes an empty data dir — on an existing volume the stored
+      # password wins, so rotating means ALTER CURRENT USER SET PASSWORD.
+      # The :? guard fails the start loudly rather than silently building
+      # "neo4j/" from an unset variable.
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:?set NEO4J_PASSWORD in .env}
       - NEO4J_apoc_export_file_enabled=true
       - NEO4J_apoc_import_file_enabled=true
       - NEO4J_apoc_export_file_use_neo4j_config=true

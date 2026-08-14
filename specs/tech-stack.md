@@ -9,7 +9,10 @@ Anything not in either column is out of scope until added here.
 ### Graph database — Neo4j
 - Image: `aelfred/imdb_neo4j:latest` (preloaded IMDB dump).
 - Plugins: **APOC** and **Graph Data Science (GDS)**.
-- Bolt on `7687`, HTTP on `7474`. Auth: `neo4j/adminadmin` (dev only).
+- Bolt on `7687`, HTTP on `7474`, both bound to `127.0.0.1` — reach them
+  through an SSH tunnel, never from outside.
+- Auth: user `neo4j`, password from `NEO4J_PASSWORD` in the gitignored
+  `.env` (never committed).
 - Volumes: `neo4j/data`, `neo4j/plugins`, `neo4j/raw_data` (DVC-tracked).
 - GDS is used for centrality (PageRank, Eigenvector, Degree) and node
   embeddings (`compute_embeddings.py`, `compute_embeddings_sage.py`).
@@ -53,6 +56,14 @@ Anything not in either column is out of scope until added here.
 
 ### Tooling
 - `docker-compose.yaml` orchestrates `neo4j`, `fastapi`, `frontend`.
+- **Neo4j MCP server** (`.mcp.json`) — developer tooling only, not part of
+  the running service. `mcp-neo4j-cypher` over stdio gives an MCP client
+  (Claude Code) `get_neo4j_schema` and `read_neo4j_cypher` against the dev
+  graph, for checking generated Cypher and inspecting centrality properties.
+  Runs `--read-only`, so it cannot mutate the IMDB dump. Requires the SSH
+  tunnel to be up and `NEO4J_PASSWORD` exported. Deliberately *not* deployed
+  to the VPS: the user-facing NL→Cypher path is FastAPI's, and the HTTP
+  transport has no auth of its own.
 - `notebooks/` holds exploratory work.
 - `tests/` holds the test suite.
 - DVC tracks raw Neo4j data (`*.dvc` files).
