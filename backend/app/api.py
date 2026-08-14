@@ -23,16 +23,26 @@ from app.services.tools.expand import expand_person, expand_movie
 from app.services.graph import enhanced_graph as graph
 
 
-def enrich_with_pagerank(d3_data):
-    """Fetch betweennessCentrality directly from Neo4j and merge into D3 node data."""
-    node_ids = [n['id'] for n in d3_data['nodes']]
-    if not node_ids:
+def enrich_with_betweenness(d3_data):
+    """Fetch betweennessCentrality directly from Neo4j and merge into D3 node data.
+
+    Ids are split by node type so each lookup is anchored on a label. An
+    untyped MATCH (n) gives the planner no label to hang an index on, so it
+    scans all 25M nodes; :Person and :Movie both have an index on their id.
+    """
+    person_ids = [n['id'] for n in d3_data['nodes'] if n.get('type') == 'Person']
+    movie_ids = [n['id'] for n in d3_data['nodes'] if n.get('type') == 'Movie']
+    if not person_ids and not movie_ids:
         return d3_data
     results = graph.query(
-        "UNWIND $ids AS nid "
-        "MATCH (n) WHERE n.personId = nid OR n.movieId = nid "
-        "RETURN coalesce(n.personId, n.movieId) AS id, n.betweennessCentrality AS betweennessCentrality",
-        {"ids": node_ids}
+        "UNWIND $personIds AS pid "
+        "MATCH (p:Person {personId: pid}) "
+        "RETURN p.personId AS id, p.betweennessCentrality AS betweennessCentrality "
+        "UNION ALL "
+        "UNWIND $movieIds AS mid "
+        "MATCH (m:Movie {movieId: mid}) "
+        "RETURN m.movieId AS id, m.betweennessCentrality AS betweennessCentrality",
+        {"personIds": person_ids, "movieIds": movie_ids}
     )
     pr_map = {r['id']: r['betweennessCentrality'] for r in results if r['betweennessCentrality'] is not None}
     for node in d3_data['nodes']:
