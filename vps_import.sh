@@ -43,9 +43,16 @@ echo "==> 3/5  importing (this is the long one)"
 # arguments as more files. Without the `--` terminator the database name is
 # consumed as another relationship file, and the import dies with the baffling
 # "File 'neo4j' doesn't exist".
+#
+# --quote is set to a character that appears nowhere in the data, which disables
+# quote handling. The default is `"`, and 34,792 titles contain one — some as
+# the whole title ("Giliap"), some inside it (William "Billy" Cohen). Neither is
+# malformed; the parser just has no reason to treat them as syntax here, since
+# the files are tab-separated and no field is ever quoted.
 docker compose run --rm neo4j neo4j-admin database import full \
   --overwrite-destination \
   --delimiter='\t' \
+  --quote='†' \
   --skip-bad-relationships \
   --skip-duplicate-nodes \
   --nodes="$IMPORT_DIR/movies.csv" \
