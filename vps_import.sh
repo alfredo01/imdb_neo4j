@@ -49,12 +49,21 @@ echo "==> 3/5  importing (this is the long one)"
 # the whole title ("Giliap"), some inside it (William "Billy" Cohen). Neither is
 # malformed; the parser just has no reason to treat them as syntax here, since
 # the files are tab-separated and no field is ever quoted.
+#
+# Skipped entries still count against --bad-tolerance, whose default of 1000 is
+# below the ~8k relationships in title.principals that reference ids missing
+# from title.basics or name.basics. Those are IMDB's own referential gaps, so
+# the tolerance is raised well past them rather than pretending the data is
+# clean. The report goes to the mounted import dir; the default location is
+# inside the container and vanishes with `run --rm`.
 docker compose run --rm neo4j neo4j-admin database import full \
   --overwrite-destination \
   --delimiter='\t' \
   --quote='†' \
   --skip-bad-relationships \
   --skip-duplicate-nodes \
+  --bad-tolerance=100000 \
+  --report-file="$IMPORT_DIR/import.report" \
   --nodes="$IMPORT_DIR/movies.csv" \
   --nodes=Person="$IMPORT_DIR/people_names.csv" \
   --relationships="$IMPORT_DIR/roles.csv" \
