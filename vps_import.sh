@@ -39,6 +39,10 @@ for dir in databases transactions; do
 done
 
 echo "==> 3/5  importing (this is the long one)"
+# --nodes and --relationships are variadic: each keeps eating following
+# arguments as more files. Without the `--` terminator the database name is
+# consumed as another relationship file, and the import dies with the baffling
+# "File 'neo4j' doesn't exist".
 docker compose run --rm neo4j neo4j-admin database import full \
   --overwrite-destination \
   --delimiter='\t' \
@@ -47,7 +51,7 @@ docker compose run --rm neo4j neo4j-admin database import full \
   --nodes="$IMPORT_DIR/movies.csv" \
   --nodes=Person="$IMPORT_DIR/people_names.csv" \
   --relationships="$IMPORT_DIR/roles.csv" \
-  neo4j
+  -- neo4j
 
 echo "==> 4/5  starting neo4j"
 docker compose up -d neo4j
