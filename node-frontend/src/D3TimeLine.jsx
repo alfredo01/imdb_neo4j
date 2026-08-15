@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
+import { displayLabel } from "./titles";
 
 function D3Timeline({ data = [], onSelect = () => {} }) {
   const ref = useRef();
@@ -43,7 +44,7 @@ function D3Timeline({ data = [], onSelect = () => {} }) {
       .attr("x", d => xScale(d.year))
       .attr("y", height / 2 - 14)
       .attr("text-anchor", "middle")
-      .text(d => d.label ?? d.year)
+      .text(d => displayLabel(d) ?? d.year)
       .style("font-size", "11px");
 
   }, [data, onSelect]);

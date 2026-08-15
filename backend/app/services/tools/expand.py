@@ -7,6 +7,7 @@ movies; for a Movie, everyone involved in it.
 """
 
 from app.services.graph import enhanced_graph as graph
+from app.services.tools.titles import localised_titles
 
 # Step 1 of the person expansion: the person and their complete filmography,
 # most central first. Movies own the node budget, so this is capped only by the
@@ -97,6 +98,9 @@ def _movie_node(props, is_center=False, roles=None):
         node["subjectRoles"] = roles
     if props.get("year") is not None:
         node["year"] = props["year"]
+    titles = localised_titles(props)
+    if titles:
+        node["titles"] = titles
     if props.get("betweennessCentrality") is not None:
         node["betweennessCentrality"] = props["betweennessCentrality"]
     if is_center:

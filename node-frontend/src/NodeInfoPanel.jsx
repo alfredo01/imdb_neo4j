@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { preferredLanguages, displayLabel, titleInLanguage } from "./titles";
 
 // Wikipedia's REST summary endpoint is CORS-open and needs no key: it returns
 // the lead paragraph plus a thumbnail, which is exactly the "essential" of an
@@ -26,16 +27,6 @@ const FILM_WORDS = {
 
 const filmWords = lang => FILM_WORDS[lang] || ["film"];
 
-// The reader's languages, most preferred first, reduced to the base subtag a
-// Wikipedia edition is named after ("fr-CA" -> "fr"). English is appended as
-// the universal fallback: it is the largest edition, so when the reader's own
-// language has no article it is the one most likely to.
-function preferredLanguages() {
-  const raw = (typeof navigator !== "undefined" && (navigator.languages || [navigator.language])) || [];
-  const codes = raw.filter(Boolean).map(l => l.toLowerCase().split("-")[0]);
-  return [...new Set([...codes, "en"])].slice(0, 3);
-}
-
 async function fetchSummary(lang, title, signal) {
   const res = await fetch(rest(lang) + encodeURIComponent(title.replace(/ /g, "_")), {
     signal,
@@ -50,7 +41,7 @@ async function fetchSummary(lang, title, signal) {
 // resolves to the movie, not the noun.
 async function searchTitle(lang, node, signal) {
   const hint = node.type === "Movie"
-    ? `${node.label} ${node.year || ""} ${filmWords(lang)[0]}`
+    ? `${titleInLanguage(node, lang)} ${node.year || ""} ${filmWords(lang)[0]}`
     : node.label;
   const params = new URLSearchParams({
     action: "query",
@@ -105,7 +96,9 @@ function plausible(lang, node, summary) {
 // page counts as a miss: it has no useful extract, so fall through to search
 // rather than showing "X may refer to...".
 async function lookupIn(lang, node, signal) {
-  const direct = await fetchSummary(lang, node.label, signal);
+  // The regional title is the one that names the article in that edition, so it
+  // turns what used to be a miss-then-search into a direct hit.
+  const direct = await fetchSummary(lang, titleInLanguage(node, lang), signal);
   if (plausible(lang, node, direct)) return { summary: direct, lang };
 
   const title = await searchTitle(lang, node, signal);
@@ -196,7 +189,7 @@ export default function NodeInfoPanel({ node, onClose }) {
       }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: "17px", fontWeight: "bold", lineHeight: 1.25 }}>
-            {node.label}
+            {displayLabel(node)}
           </div>
           <div style={{ fontSize: "12px", color: "#777", marginTop: "3px" }}>
             {isMovie ? "Movie" : "Person"}
@@ -231,7 +224,7 @@ export default function NodeInfoPanel({ node, onClose }) {
 
         {status === "empty" && (
           <p style={{ color: "#888" }}>
-            No Wikipedia article found for “{node.label}”.
+            No Wikipedia article found for “{displayLabel(node)}”.
           </p>
         )}
 
@@ -240,7 +233,7 @@ export default function NodeInfoPanel({ node, onClose }) {
             {summary.thumbnail && (
               <img
                 src={summary.thumbnail.source}
-                alt={node.label}
+                alt={displayLabel(node)}
                 style={{
                   width: "100%",
                   maxHeight: "260px",

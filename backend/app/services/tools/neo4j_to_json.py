@@ -1,3 +1,6 @@
+from app.services.tools.titles import localised_titles
+
+
 def to_d3_format(results):
     nodes = {}
     links = []
@@ -17,6 +20,10 @@ def to_d3_format(results):
                     }
                     if node["type"] == "Movie" and "year" in value:
                         node["year"] = value["year"]
+                    if node["type"] == "Movie":
+                        titles = localised_titles(value)
+                        if titles:
+                            node["titles"] = titles
                     if "betweennessCentrality" in value:
                         node["betweennessCentrality"] = value["betweennessCentrality"]
                     nodes[node_id] = node

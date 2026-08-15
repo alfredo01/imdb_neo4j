@@ -1,6 +1,8 @@
 tests/
 .env
 node_modules
+__pycache__/
+*.pyc
 streamlit/
 notebooks/
 tests/
@@ -8,3 +10,14 @@ CENTRALITY_USAGE.md
 convert_neo4j_pathes_to_d3.py
 yarn.lock
 d3.html
+
+# IMDB dumps and the import files built from them: ~15GB, and reproducible from
+# build_import_csv.sh. The data itself travels via DVC, never through git.
+*.tsv
+*.tsv:Zone.Identifier
+import_csv/
+
+# Editor and tooling leftovers
+.swp
+*.swp
+.vscode/

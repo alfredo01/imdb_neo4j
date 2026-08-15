@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
+import { displayLabel } from "./titles";
 
 function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = () => {} }) {
   const svgRef = useRef();
@@ -203,7 +204,7 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
       .style("font-size", d => (d.type === "Movie" || d.isCenter) ? "16px" : "12px")
       .style("font-weight", d => (d.type === "Movie" || d.isCenter) ? "bold" : "normal")
       .style("pointer-events", "none")
-      .text(d => d.label);
+      .text(d => displayLabel(d));
 
     // Draw timeline axis (inside container so it pans/zooms with graph)
     const axis = d3.axisBottom(xScale).tickFormat(d3.format("d"));
