@@ -52,7 +52,7 @@ class CentralityComputer:
                 CALL gds.eigenvector.write('imdb-graph', {
                     writeProperty: 'eigenvectorCentrality',
                     maxIterations: 100,
-                    concurrency: 1
+                    concurrency: 4
                 })
                 YIELD nodePropertiesWritten, ranIterations
                 RETURN nodePropertiesWritten, ranIterations
@@ -94,7 +94,7 @@ class CentralityComputer:
                     writeProperty: 'pageRank',
                     maxIterations: 100,
                     dampingFactor: 0.85,
-                    concurrency: 1
+                    concurrency: 4
                 })
                 YIELD nodePropertiesWritten, ranIterations
                 RETURN nodePropertiesWritten, ranIterations
@@ -137,7 +137,7 @@ class CentralityComputer:
                 CALL gds.betweenness.write('imdb-graph', {
                     writeProperty: 'betweennessCentrality',
                     samplingSize: 1000,
-                    concurrency: 1
+                    concurrency: 4
                 })
                 YIELD nodePropertiesWritten
                 RETURN nodePropertiesWritten
@@ -254,8 +254,12 @@ if __name__ == "__main__":
     try:
         print("Starting centrality computation...\n")
 
-        # Compute all centrality metrics
-        computer.compute_eigenvector_centrality()
+        # Eigenvector is deliberately not in this sequence. Nothing reads
+        # `eigenvectorCentrality`: ordering goes through pageRank and
+        # degreeCentrality, the D3 payload carries betweennessCentrality, and
+        # the only other mention is in cypher.py, the prompt module disabled at
+        # api.py:19. It is the slowest of the four and the method is still here,
+        # so call it explicitly if that ever changes.
         computer.compute_pagerank()
         computer.compute_betweenness_centrality()
         computer.compute_degree_centrality()
