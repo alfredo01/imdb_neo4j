@@ -13,7 +13,7 @@ Schema:
 
 CRITICAL - ALWAYS LIMIT RESULTS:
 All queries MUST include ORDER BY ... LIMIT 60 to prevent overloading the visualization.
-Use pageRankCentrality or degreeCentrality to order by importance.
+Use pageRank or degreeCentrality to order by importance.
 Always return graph patterns (nodes + relationships), not just nodes.
 NEVER generate a query without a LIMIT clause.
 
@@ -27,7 +27,7 @@ Examples with graph patterns:
 # Specific movie query - still limit results
 MATCH (p:Person)-[r:ACTED_IN]->(m:Movie {{title: "Titanic"}})
 WITH p, r, m
-ORDER BY p.pageRankCentrality DESC
+ORDER BY p.pageRank DESC
 LIMIT 60
 RETURN p, r, m
 
@@ -35,7 +35,7 @@ RETURN p, r, m
 MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WHERE m.title CONTAINS "Action"
 WITH p, r, m
-ORDER BY p.pageRankCentrality DESC, m.pageRankCentrality DESC
+ORDER BY p.pageRank DESC, m.pageRank DESC
 LIMIT 60
 RETURN p, r, m
 
@@ -43,7 +43,7 @@ RETURN p, r, m
 MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WHERE m.year = "1995"
 WITH p, r, m
-ORDER BY m.pageRankCentrality DESC
+ORDER BY m.pageRank DESC
 LIMIT 60
 RETURN p, r, m
 
@@ -51,7 +51,7 @@ RETURN p, r, m
 MATCH (p:Person)-[r:ACTED_IN|DIRECTED]->(m:Movie)
 WHERE m.year >= "2000"
 WITH p, r, m
-ORDER BY p.pageRankCentrality DESC
+ORDER BY p.pageRank DESC
 LIMIT 60
 RETURN p, r, m
 

@@ -20,7 +20,7 @@ CALL {
     WITH p
     MATCH (p)-[r:ACTED_IN|DIRECTED]->(m:Movie)
     WITH m, collect(DISTINCT type(r)) AS roles
-    ORDER BY coalesce(m.pageRankCentrality, 0) DESC,
+    ORDER BY coalesce(m.pageRank, 0) DESC,
              coalesce(m.degreeCentrality, 0) DESC
     LIMIT $movieLimit
     RETURN collect({movie: m, roles: roles}) AS movies
@@ -44,7 +44,7 @@ CALL {
     WITH m
     MATCH (a:Person)-[:ACTED_IN]->(m)
     WITH a
-    ORDER BY coalesce(a.pageRankCentrality, 0) DESC,
+    ORDER BY coalesce(a.pageRank, 0) DESC,
              coalesce(a.degreeCentrality, 0) DESC
     LIMIT $actorLimit
     RETURN collect(a) AS actors
@@ -64,7 +64,7 @@ CALL {
     WITH m
     MATCH (p:Person)-[r]->(m)
     WITH p, collect(DISTINCT type(r)) AS roles
-    ORDER BY coalesce(p.pageRankCentrality, 0) DESC,
+    ORDER BY coalesce(p.pageRank, 0) DESC,
              coalesce(p.degreeCentrality, 0) DESC
     LIMIT $personLimit
     RETURN collect({person: p, roles: roles}) AS people
