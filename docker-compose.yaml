@@ -22,9 +22,43 @@ services:
       - NEO4J_apoc_export_file_enabled=true
       - NEO4J_apoc_import_file_enabled=true
       - NEO4J_apoc_export_file_use_neo4j_config=true
-      - NEO4J_db_memory_transaction_total_max=2G
-      - NEO4J_dbms_memory_heap_initial__size=4G
-      - NEO4J_dbms_memory_heap_max__size=12G
+      # Raised from 2G for the Cypher projection in compute_centrality.py.
+      # `gds.graph.project` is an aggregating function, so the ~8.2M rows it
+      # consumes accumulate inside one transaction and are charged to this pool;
+      # 2G is close enough to the projection's own footprint that hitting the
+      # cap would surface as a MemoryPoolOutOfMemoryError mid-projection rather
+      # than as anything obviously about memory.
+      - NEO4J_db_memory_transaction_total_max=4G
+
+      # Memory. The box has 23GiB and no swap; this claims 16GiB and leaves the
+      # rest to fastapi, the frontend and the OS.
+      #
+      # The page cache is the setting that matters. The image ships a
+      # neo4j.conf setting it to 512MiB — nothing here used to override it, so
+      # that is what was running: 512MiB of cache for a store whose 99.7M
+      # relationships alone are ~3.4GiB before any properties. Every traversal
+      # was a disk read, and anything that walks the relationship store at
+      # scale (compute_centrality, compute_embeddings) crawled. As a smell
+      # test, 10k Person nodes plus a one-hop `EXISTS { (p)-[]->(:Movie) }`
+      # could not finish inside a 30s client timeout.
+      #
+      # Heap came down from 12G to make room. It was only ever that high
+      # because gds.betweenness.write wanted 6.4GiB against a projection of all
+      # 16.1M Person and Movie nodes; compute_centrality.py now projects the
+      # ~3M that can actually score, which needs about 1GiB.
+      #
+      # initial == max on purpose: with -XX:+AlwaysPreTouch (set in the image)
+      # the JVM commits the whole heap at startup anyway, so a smaller initial
+      # size buys nothing and only adds resize pauses.
+      #
+      # These are the Neo4j 5+ setting names. The old dbms.* spellings still
+      # resolve but are deprecated, and mixing the two makes it genuinely hard
+      # to tell which one won — check with:
+      #   SHOW SETTINGS YIELD name, value, isExplicitlySet
+      #   WHERE name STARTS WITH 'server.memory'
+      - NEO4J_server_memory_heap_initial__size=8G
+      - NEO4J_server_memory_heap_max__size=8G
+      - NEO4J_server_memory_pagecache_size=8G
 
       - NEO4J_PLUGINS=["graph-data-science", "apoc"]
       - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
