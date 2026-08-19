@@ -13,9 +13,15 @@ export function preferredLanguages() {
   return [...new Set([...codes, "en"])].slice(0, 3);
 }
 
-// The title to show for a node. `en` never matches a key in `titles` — the
-// English title is already `label` — so an English reader lands on the floor,
-// which is what they want.
+// The title to show for a node: the reader's language, then the film's own, then
+// IMDB's English one.
+//
+// `en` never matches a key in `titles` — the English title is already `label` —
+// so an English reader skips the loop entirely and lands on `original`, not on
+// `label`. They see "L'armée des ombres", not "Army of Shadows". That is
+// deliberate, and it only bites for the ~13% of movies whose originalTitle
+// differs from their primary title; make the last line `node.label` if English
+// readers should stay on IMDB's title.
 export function displayLabel(node) {
   if (!node) return "";
   const titles = node.titles;
