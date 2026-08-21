@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import D3ForceGraph from "./D3ForceGraph";
 import NodeInfoPanel from "./NodeInfoPanel";
+import { t } from "./i18n";
 import axios from "axios";
 
 // Back/Forward share one look; only the disabled state differs.
@@ -23,7 +24,7 @@ function navButtonStyle(disabled) {
 export default function App() {
   const [data, setData] = useState(null);
   const [entities, setEntities] = useState(null);
-  const [query, setQuery] = useState("Show the graph of Alfred Hitchcock movies, with actors between 1950 and 1960");
+  const [query, setQuery] = useState(() => t("exampleQuery"));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -211,7 +212,7 @@ export default function App() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Show the graph of Alfred Hitchcock's movies , with actors between 1950 and 1960"
+            placeholder={t("exampleQuery")}
             disabled={loading}
             style={{
               flex: 1,
