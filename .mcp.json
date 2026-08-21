@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "neo4j": {
+      "command": "/bin/bash",
+      "args": [
+        "-c",
+        ". ~/.neo4j-env && exec \"${NEO4J_MCP_BIN:-/home/alfredo/.mcp-neo4j-venv/bin/mcp-neo4j-cypher}\" --read-only --transport stdio --db-url bolt://localhost:7687 --username neo4j --database neo4j"
+      ]
+    }
+  }
+}
