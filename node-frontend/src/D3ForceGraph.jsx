@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { displayLabel } from "./titles";
+import { t } from "./i18n";
 
 function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = () => {} }) {
   const svgRef = useRef();
@@ -15,6 +16,13 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
   const onNodeActivateRef = useRef(onNodeActivate);
   onSelectRef.current = onSelect;
   onNodeActivateRef.current = onNodeActivate;
+
+  // The person or title this graph was built around. It is the reason this
+  // particular set of nodes is on screen, so the header gives it real weight
+  // rather than the 14px afterthought it used to be.
+  const subject = entities
+    ? [...(entities.persons || []), ...(entities.movies || [])].join(", ")
+    : "";
 
   // Force parameters state
   const [linkDistance, setLinkDistance] = useState(100);
@@ -270,14 +278,28 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
         justifyContent: "space-between",
         alignItems: "center"
       }}>
-        <h2 style={{ margin: 0 }}>
-          Movie Timeline Graph
-          {entities && (entities.persons.length > 0 || entities.movies.length > 0) && (
-            <span style={{ fontSize: "14px", fontWeight: "normal", marginLeft: "15px", color: "#555" }}>
-              {[...entities.persons, ...entities.movies].join(", ")}
-            </span>
-          )}
-        </h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "14px", flexWrap: "wrap", minWidth: 0 }}>
+            <h2 style={{ margin: 0 }}>Movie Timeline Graph</h2>
+            {subject && (
+              <span
+                title={subject}
+                style={{
+                  fontSize: "22px",
+                  fontWeight: 600,
+                  color: "#8E44AD",
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                {subject}
+              </span>
+            )}
+          </div>
+          <span style={{ fontSize: "13px", color: "#666" }}>{t("graphHint")}</span>
+        </div>
         <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#8E44AD" }}></div>
