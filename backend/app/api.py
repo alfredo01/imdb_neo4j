@@ -20,6 +20,7 @@ print("Current Working Directory:", os.getcwd())  # Check where FastAPI is execu
 from app.services.tools.cypher_to_d3 import cypher_qa_tool as generate_response
 from app.services.tools.neo4j_to_json import to_d3_format
 from app.services.tools.expand import expand_person, expand_movie
+from app.services.tools.recommend import recommend_movie
 from app.services.graph import enhanced_graph as graph
 
 
@@ -146,6 +147,27 @@ def expand_person_endpoint(
         detail = (f"No person found for '{person}'" if d3_data["center"] is None
                   else f"'{person}' has no films in the graph")
         raise HTTPException(status_code=404, detail=detail)
+    return d3_data
+
+
+@api.get("/recommend/movie/{movie}", tags=['Explore'])
+def recommend_movie_endpoint(
+    movie: str,
+    limit: int = 10,
+):
+    """Movies similar to this one, ranked by shared crew.
+
+    `movie` is a movieId (e.g. tt0052357) or an exact title. Similarity is the
+    cosine overlap of the two films' crews, so it answers "who else made this"
+    rather than "who else watched this" — there is no ratings data to do the
+    latter with.
+    """
+    limit = max(1, min(limit, 50))
+    d3_data = recommend_movie(movie, limit=limit)
+    if d3_data["center"] is None:
+        raise HTTPException(status_code=404, detail=f"No movie found for '{movie}'")
+    # A known film with no qualifying overlap is a valid empty result, not a
+    # 404: the seed node comes back on its own and the caller can say so.
     return d3_data
 
 
