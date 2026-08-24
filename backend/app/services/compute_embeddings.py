@@ -218,7 +218,7 @@ class EmbeddingComputer:
                     writeRelationshipType: $relType,
                     writeProperty: 'score',
                     randomSeed: $seed,
-                    concurrency: 1,  # see RANDOM_SEED: determinism over speed
+                    concurrency: 1,  // see RANDOM_SEED: determinism over speed
                     sampleRate: 0.5,
                     deltaThreshold: 0.001
                 })
@@ -233,17 +233,20 @@ class EmbeddingComputer:
                 seed=RANDOM_SEED,
             ).single()
 
-            dist = record["similarityDistribution"]
             print(f"  {record['nodesCompared']:,} movies compared")
             print(f"  {record['relationshipsWritten']:,} {SIMILARITY_REL} edges written")
             print(
                 f"  {record['ranIterations']} iterations,"
                 f" converged: {record['didConverge']}"
             )
-            print(
-                f"  similarity  mean {dist['mean']:.3f}"
-                f"  p50 {dist['p50']:.3f}  p95 {dist['p95']:.3f}  max {dist['max']:.3f}"
+            # Reported defensively: this lands after the longest step in the
+            # pipeline, and an unexpected key here would raise into the finally
+            # and drop the projection along with it.
+            dist = record["similarityDistribution"] or {}
+            shown = "  ".join(
+                f"{k} {dist[k]:.3f}" for k in ("mean", "p50", "p95", "max") if k in dist
             )
+            print(f"  similarity  {shown}" if shown else f"  similarity  {dist}")
 
     def persist_embeddings(self):
         """
@@ -317,8 +320,10 @@ if __name__ == "__main__":
         ("Clearing previous run", computer.reset),
         ("Projecting collaboration graph", computer.project),
         ("Computing FastRP embeddings", computer.compute_embeddings),
-        ("Building recommendation edges", computer.build_recommendations),
+        # Persisted before KNN so the longest, most failure-prone step cannot
+        # take the finished vectors down with it.
         ("Persisting movie embeddings", computer.persist_embeddings),
+        ("Building recommendation edges", computer.build_recommendations),
     ]
 
     try:
