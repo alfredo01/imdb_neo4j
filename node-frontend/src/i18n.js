@@ -14,30 +14,60 @@ const STRINGS = {
       "Click a node for its Wikipedia summary · double-click it to explore its connections",
     exampleQuery:
       "Show the graph of Alfred Hitchcock movies, with actors between 1950 and 1960",
+    recommendations: "Recommendations",
+    similarTo: "Similar to {title}",
+    projectionNote: "Distance reflects shared crew — {variance}% of the structure fits in 2D",
+    noRecommendations: "No similar films found",
+    sharedCrew: "{count} shared",
+    close: "Close",
   },
   fr: {
     graphHint:
       "Cliquez sur un nœud pour afficher son résumé Wikipédia · double-cliquez pour explorer ses connexions",
     exampleQuery:
       "Affiche le graphe des films d'Alfred Hitchcock, avec les acteurs entre 1950 et 1960",
+    recommendations: "Recommandations",
+    similarTo: "Similaires à {title}",
+    projectionNote: "La distance reflète l'équipe partagée — {variance}% de la structure tient en 2D",
+    noRecommendations: "Aucun film similaire trouvé",
+    sharedCrew: "{count} en commun",
+    close: "Fermer",
   },
   es: {
     graphHint:
       "Haz clic en un nodo para ver su resumen de Wikipedia · haz doble clic para explorar sus conexiones",
     exampleQuery:
       "Muestra el grafo de las películas de Alfred Hitchcock, con los actores entre 1950 y 1960",
+    recommendations: "Recomendaciones",
+    similarTo: "Similares a {title}",
+    projectionNote: "La distancia refleja el equipo compartido — {variance}% de la estructura cabe en 2D",
+    noRecommendations: "No se encontraron películas similares",
+    sharedCrew: "{count} en común",
+    close: "Cerrar",
   },
   pt: {
     graphHint:
       "Clique num nó para ver o resumo da Wikipédia · clique duas vezes para explorar as conexões",
     exampleQuery:
       "Mostra o grafo dos filmes de Alfred Hitchcock, com os atores entre 1950 e 1960",
+    recommendations: "Recomendações",
+    similarTo: "Semelhantes a {title}",
+    projectionNote: "A distância reflete a equipa partilhada — {variance}% da estrutura cabe em 2D",
+    noRecommendations: "Nenhum filme semelhante encontrado",
+    sharedCrew: "{count} em comum",
+    close: "Fechar",
   },
   it: {
     graphHint:
       "Clicca su un nodo per vedere il riassunto di Wikipedia · fai doppio clic per esplorare le sue connessioni",
     exampleQuery:
       "Mostra il grafo dei film di Alfred Hitchcock, con gli attori tra il 1950 e il 1960",
+    recommendations: "Consigliati",
+    similarTo: "Simili a {title}",
+    projectionNote: "La distanza riflette la troupe condivisa — {variance}% della struttura sta in 2D",
+    noRecommendations: "Nessun film simile trovato",
+    sharedCrew: "{count} in comune",
+    close: "Chiudi",
   },
 };
 
@@ -57,7 +87,15 @@ export function uiLanguage() {
 
 // English is the fallback for a key missing from a translation, so a partially
 // translated language degrades to mixed copy rather than to `undefined`.
-export function t(key) {
+//
+// `vars` fills {placeholders}: t("similarTo", {title: "Vertigo"}). Word order
+// differs between these languages, so the placeholder has to travel inside the
+// translated string rather than being concatenated around it.
+export function t(key, vars) {
   const lang = uiLanguage();
-  return STRINGS[lang]?.[key] ?? STRINGS.en[key];
+  const template = STRINGS[lang]?.[key] ?? STRINGS.en[key] ?? key;
+  if (!vars) return template;
+  return template.replace(/\{(\w+)\}/g, (match, name) =>
+    Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : match
+  );
 }

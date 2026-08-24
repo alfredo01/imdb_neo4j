@@ -3,6 +3,7 @@ import * as d3 from "d3";
 import D3ForceGraph from "./D3ForceGraph";
 import NodeInfoPanel from "./NodeInfoPanel";
 import { t } from "./i18n";
+import RecommendationPlot from "./RecommendationPlot";
 import axios from "axios";
 
 // Back/Forward share one look; only the disabled state differs.
@@ -29,6 +30,10 @@ export default function App() {
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
+  // The recommendation plot, when open. Held separately from `data` so it
+  // overlays the graph rather than replacing it: closing returns to exactly the
+  // view you left, with no history entry spent.
+  const [recommendations, setRecommendations] = useState(null);
   // Stack of previously displayed graphs, so Back can step out of a drill-down
   // chain one level at a time. Each entry is a full snapshot of what the view
   // was showing; the current graph is never in here.
@@ -126,6 +131,37 @@ export default function App() {
 
   // Single click opens the info panel (photo + Wikipedia lead); double-click
   // still drills down. Clicking the same node again closes the panel.
+  // Which film the Recommendations button acts on: whatever is selected, or the
+  // film the current view is centred on. Persons are skipped — the endpoint is
+  // movie-to-movie, and recommending "films like this actor" would mean
+  // something different that the backend does not compute.
+  const recommendTarget = (() => {
+    if (selectedNode && selectedNode.type === "Movie") return selectedNode;
+    const center = data?.nodes?.find(n => n.id === data.center);
+    if (center && center.type === "Movie") return center;
+    const onlyMovie = data?.nodes?.filter(n => n.type === "Movie");
+    return onlyMovie && onlyMovie.length === 1 ? onlyMovie[0] : null;
+  })();
+
+  async function handleRecommend(target) {
+    if (!target || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
+      const response = await axios.get(
+        `${apiUrl}/recommend/movie/${encodeURIComponent(target.id)}`,
+        { params: { limit: 12 } }
+      );
+      setRecommendations({ payload: response.data, title: target.label });
+    } catch (err) {
+      console.error("Failed to fetch recommendations:", err);
+      setError(`Failed to load recommendations for ${target.label}: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function handleSelect(item) {
     if (!item || !item.id) return;
     setSelectedNode(prev => (prev && prev.id === item.id ? null : item));
@@ -259,9 +295,26 @@ export default function App() {
           rather than an overlay so it never hides the legend or the force
           controls; D3ForceGraph re-measures itself when the space changes. */}
       <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
-        <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+        <div style={{ flex: 1, minWidth: 0, overflow: "hidden", position: "relative" }}>
         {data ? (
-          <D3ForceGraph data={data} entities={entities} onSelect={handleSelect} onNodeActivate={handleNodeActivate} />
+          <>
+            <D3ForceGraph
+              data={data}
+              entities={entities}
+              onSelect={handleSelect}
+              onNodeActivate={handleNodeActivate}
+              recommendTarget={recommendTarget}
+              onRecommend={handleRecommend}
+            />
+            {recommendations && (
+              <RecommendationPlot
+                payload={recommendations.payload}
+                title={recommendations.title}
+                onSelect={handleSelect}
+                onClose={() => setRecommendations(null)}
+              />
+            )}
+          </>
         ) : (
           <div style={{
             display: "flex",

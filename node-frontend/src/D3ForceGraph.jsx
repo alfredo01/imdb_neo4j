@@ -3,12 +3,17 @@ import * as d3 from "d3";
 import { displayLabel } from "./titles";
 import { t } from "./i18n";
 
-function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = () => {} }) {
+function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = () => {},
+                       recommendTarget = null, onRecommend = () => {} }) {
   const svgRef = useRef();
   const containerRef = useRef();
   const simulationRef = useRef();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [showControls, setShowControls] = useState(false);
+  // The force controls are kept but no longer reachable from the header: the
+  // tuned defaults below (100 / -200 / 30 / 0.3) are the ones worth shipping,
+  // and the button that toggled this now belongs to Recommendations. Flip
+  // this to true, or wire setShowControls to something, to get the panel back.
+  const [showControls] = useState(false);
 
   // App re-creates these handlers on every render; keeping them in refs stops
   // the draw effect from tearing down and restarting the simulation each time.
@@ -327,18 +332,21 @@ function D3ForceGraph({ data, entities, onSelect = () => {}, onNodeActivate = ()
             </div>
           )}
           <button
-            onClick={() => setShowControls(!showControls)}
+            onClick={() => recommendTarget && onRecommend(recommendTarget)}
+            disabled={!recommendTarget}
+            title={recommendTarget ? recommendTarget.label : undefined}
             style={{
               padding: "8px 16px",
               background: "#8E44AD",
               color: "white",
               border: "none",
               borderRadius: "4px",
-              cursor: "pointer",
-              fontWeight: "bold"
+              cursor: recommendTarget ? "pointer" : "not-allowed",
+              fontWeight: "bold",
+              opacity: recommendTarget ? 1 : 0.5
             }}
           >
-            {showControls ? "Hide" : "Show"} Force Controls
+            {t("recommendations")}
           </button>
         </div>
       </div>
